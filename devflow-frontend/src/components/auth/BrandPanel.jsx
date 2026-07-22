@@ -3,30 +3,34 @@ import DevFlowLogo from "../common/DevFlowLogo";
 
 function BrandPanel() {
   return (
-    <section className="relative bg-[#0D1117] hidden lg:flex flex-col justify-between p-8 xl:p-12 border-r border-[#30363D]">
-      {/* Brand Topbar */}
-      <div className="flex items-center justify-between relative z-10">
+    <section className="relative hidden lg:flex flex-col justify-between bg-[#0D1117] border-r border-[#30363D] p-8 xl:p-12">
+      {/* Top */}
+      <div className="relative z-10">
         <DevFlowLogo size="md" />
       </div>
 
-      {/* Main Feature Showcase & Vector Preview */}
-      <div className="my-auto py-6 relative z-10 space-y-6 max-w-lg mx-auto w-full">
+      {/* Hero Content */}
+      <div className="relative z-10 my-auto max-w-lg mx-auto w-full space-y-8">
         <div>
-          <h2 className="text-3xl xl:text-4xl font-bold tracking-tight text-white leading-tight">
-            Streamline developer workflows & team projects.
+          <h2 className="text-3xl xl:text-5xl font-bold tracking-tight text-white leading-tight">
+            Build together.
+            <br />
+            Ship faster.
           </h2>
-          <p className="mt-3 text-xs xl:text-sm text-slate-400 leading-relaxed">
-            Organize workspaces, track team tasks, and configure automated rule triggers — built for modern engineering teams.
+
+          <p className="mt-4 text-sm xl:text-base text-slate-400 leading-relaxed max-w-md">
+            DevFlow brings projects, workflows, and automation into one
+            collaborative workspace—built for modern engineering teams.
           </p>
         </div>
 
-        {/* Self-Contained Feature Cards */}
+        {/* Feature Preview */}
         <WorkflowCanvas />
       </div>
 
-      {/* Clean Footer */}
-      <div className="pt-4 border-t border-[#30363D] flex items-center justify-between relative z-10 text-xs text-slate-500 font-mono">
-        <span>DevFlow Platform</span>
+      {/* Footer */}
+      <div className="relative z-10 flex items-center justify-between border-t border-[#30363D] pt-4 text-xs font-mono text-slate-500">
+        <span>© 2026 DevFlow</span>
         <span>v1.0.0</span>
       </div>
     </section>
