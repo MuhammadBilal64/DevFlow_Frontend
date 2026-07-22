@@ -1,6 +1,68 @@
 @import "tailwindcss";
 
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    background-color: #0B0E14;
+    color: #E6EDF3;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  code, pre, .font-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+/* Browser Autofill Override for Dark Mode */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: #F0F6FC !important;
+  transition: background-color 50000s ease-in-out 0s;
+  box-shadow: inset 0 0 0px 1000px #0D1117 !important;
+}
+
+/* Linear / Vercel Inspired Dark Surface Tokens */
+.surface-panel {
+  background-color: #131720;
+  border: 1px solid #21262D;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.surface-input {
+  background-color: #0D1117 !important;
+  border: 1px solid #30363D;
+  color: #F0F6FC !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.surface-input:focus-within, .surface-input:focus {
+  border-color: #38BDF8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15) !important;
+}
+
+.btn-primary {
+  background-color: #F0F6FC;
+  color: #0B0E14;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.btn-primary:hover {
+  background-color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.12);
+  transform: translateY(-0.5px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
 }
