@@ -35,6 +35,23 @@ function Register() {
       return;
     }
 
+    if (name.trim().length < 3) {
+      setErrorMsg("Name must be at least 3 characters.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email.trim())) {
+      setErrorMsg("Enter a valid email address.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setErrorMsg("Password must be at least 8 characters.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setErrorMsg("Passwords do not match.");
       return;
@@ -100,10 +117,10 @@ function Register() {
           label="Full Name"
           placeholder="Muhammad Bilal"
           value={name}
-        onChange={(e) => {
-    setName(e.target.value);
-    setErrorMsg("");
-  }}
+          onChange={(e) => {
+            setName(e.target.value);
+            setErrorMsg("");
+          }}
           required
           autoComplete="name"
           disabled={isLoading}
@@ -114,7 +131,10 @@ function Register() {
           type="email"
           placeholder="name@company.com"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setErrorMsg("");
+          }}
           required
           autoComplete="email"
           disabled={isLoading}
@@ -125,7 +145,10 @@ function Register() {
           type="password"
           placeholder="••••••••••••"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setErrorMsg("");
+          }}
           required
           autoComplete="new-password"
           disabled={isLoading}
@@ -136,16 +159,16 @@ function Register() {
           type="password"
           placeholder="••••••••••••"
           value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
+          onChange={(e) => {
+            setConfirmPassword(e.target.value);
+            setErrorMsg("");
+          }}
           required
           autoComplete="new-password"
           disabled={isLoading}
         />
 
-        <AuthButton
-          type="submit"
-          loading={isLoading}
-        >
+        <AuthButton type="submit" loading={isLoading}>
           Create Account
         </AuthButton>
       </form>
