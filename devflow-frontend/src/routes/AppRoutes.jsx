@@ -3,7 +3,9 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import AuthRoutes from "./AuthRoutes";
 import ProtectedRoute from "./ProtectedRoute";
 
-import Dashboard from "../pages/Dashboard";
+import DashboardLayout from "../layouts/DashboardLayout";
+
+import Dashboard from "../pages/dashboard/Dashboard";
 
 function AppRoutes() {
   return (
@@ -15,13 +17,17 @@ function AppRoutes() {
       />
 
       <Route
-        path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <DashboardLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route
+          path="/dashboard"
+          element={<Dashboard />}
+        />
+      </Route>
 
       <Route
         path="*"
