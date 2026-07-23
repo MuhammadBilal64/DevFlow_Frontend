@@ -2,31 +2,36 @@ function StatCard({
   title,
   value,
   icon: Icon,
-  color = "text-sky-400",
+  trend,
+  trendType = "neutral", // "up", "down", "neutral"
+  iconBg = "bg-[#0B1E3B]",
+  iconColor = "text-[#38BDF8]",
 }) {
   return (
-    <div className="rounded-xl border border-[#30363D] bg-[#161B22] p-5">
-
-      <div className="flex items-center justify-between">
-
-        <div>
-          <p className="text-sm text-slate-400">
-            {title}
+    <div className="flex items-center justify-between rounded-xl border border-[#1F2937] bg-[#121721] p-5 shadow-sm transition hover:border-[#374151]">
+      <div className="space-y-1">
+        <p className="text-xs font-medium text-[#9CA3AF]">{title}</p>
+        <p className="text-3xl font-bold text-white tracking-tight">{value}</p>
+        {trend && (
+          <p
+            className={`text-xs font-medium ${
+              trendType === "up"
+                ? "text-[#34D399]"
+                : trendType === "down"
+                ? "text-[#F87171]"
+                : "text-[#6B7280]"
+            }`}
+          >
+            {trend}
           </p>
-
-          <h2 className="mt-2 text-3xl font-bold text-white">
-            {value}
-          </h2>
-        </div>
-
-        <div
-          className={`rounded-lg bg-[#0D1117] p-3 ${color}`}
-        >
-          <Icon size={22} />
-        </div>
-
+        )}
       </div>
 
+      <div
+        className={`flex h-12 w-12 items-center justify-center rounded-xl ${iconBg} ${iconColor}`}
+      >
+        <Icon size={22} />
+      </div>
     </div>
   );
 }
