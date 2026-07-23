@@ -19,11 +19,20 @@ function AuthInput({
       ? "text"
       : "password"
     : type;
+    const inputId = label
+  ? label
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+  : undefined;
 
   return (
     <div className="mb-4">
       <div className="mb-1.5 flex items-center justify-between">
-        <label className="block text-xs font-medium text-slate-300">
+        <label
+  htmlFor={inputId}
+  className="block text-xs font-medium text-slate-300"
+>
           {label}
           {required && (
             <span className="ml-1 text-slate-400">*</span>
@@ -33,6 +42,7 @@ function AuthInput({
 
       <div className="relative flex items-center">
         <input
+         id={inputId}
           type={inputType}
           placeholder={placeholder}
           value={value}

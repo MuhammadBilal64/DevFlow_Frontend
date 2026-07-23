@@ -168,7 +168,8 @@ function Register() {
           disabled={isLoading}
         />
 
-        <AuthButton type="submit" loading={isLoading}>
+        <AuthButton type="submit" loading={isLoading}  loadingText="Creating account..."
+>
           Create Account
         </AuthButton>
       </form>

@@ -146,7 +146,7 @@ function Login() {
           </a>
         </div>
 
-        <AuthButton type="submit" loading={isLoading}>
+        <AuthButton type="submit" loading={isLoading}  loadingText="Signing in...">
           Sign in
         </AuthButton>
       </form>
