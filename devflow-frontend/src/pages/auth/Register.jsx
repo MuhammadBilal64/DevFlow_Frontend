@@ -67,10 +67,12 @@ function Register() {
       });
 
       navigate("/auth/login", {
-        state: {
-          message: "Account created successfully. Please sign in.",
-        },
-      });
+  replace: true,
+  state: {
+    message: "Account created successfully. Please sign in.",
+  },
+});
+
     } catch (err) {
       console.error(err);
 
@@ -93,8 +95,11 @@ function Register() {
       />
 
       {errorMsg && (
-        <div className="mb-4 flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
-          <svg
+<div
+  role="alert"
+  aria-live="assertive"
+  className="mb-4 flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300"
+>          <svg
             className="h-4 w-4 shrink-0 text-rose-400"
             fill="none"
             viewBox="0 0 24 24"

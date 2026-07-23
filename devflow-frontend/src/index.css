@@ -2,7 +2,7 @@
 
 @layer base {
   :root {
-    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', -apple-system, 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
   }
 
@@ -15,20 +15,22 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  code, pre, .font-mono {
+  code,
+  pre,
+  .font-mono {
     font-family: var(--font-mono);
   }
 }
 
 /* Browser Autofill Override for Dark Mode */
 input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus, 
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: #F0F6FC !important;
   transition: background-color 50000s ease-in-out 0s;
-  box-shadow: inset 0 0 0px 1000px #0D1117 !important;
+  box-shadow: inset 0 0 0 1000px #0D1117 !important;
 }
 
 /* Linear / Vercel Inspired Dark Surface Tokens */
@@ -45,7 +47,8 @@ input:-webkit-autofill:active {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.surface-input:focus-within, .surface-input:focus {
+.surface-input:focus-within,
+.surface-input:focus {
   border-color: #38BDF8 !important;
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15) !important;
 }

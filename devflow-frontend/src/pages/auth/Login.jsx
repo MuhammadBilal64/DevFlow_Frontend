@@ -47,7 +47,10 @@ function Login() {
         login(response);
       }
 
-      navigate("/dashboard");
+      navigate("/dashboard", {
+  replace: true,
+});
+
     } catch (err) {
       console.error(err);
 

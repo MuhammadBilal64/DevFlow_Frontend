@@ -21,7 +21,13 @@ export function AuthProvider({ children }) {
 
 
   const login = (authData) => {
-
+if (
+    !authData ||
+    !authData.accessToken ||
+    !authData.refreshToken
+  ) {
+    throw new Error("Invalid authentication response.");
+  }
     localStorage.setItem(
       "accessToken",
       authData.accessToken
