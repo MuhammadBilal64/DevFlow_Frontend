@@ -8,6 +8,7 @@ import AuthCard from "../../components/auth/AuthCard";
 import AuthHeader from "../../components/auth/AuthHeader";
 import AuthInput from "../../components/auth/AuthInput";
 import AuthButton from "../../components/auth/AuthButton";
+import AuthFooter from "../../components/auth/AuthFooter";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -77,6 +78,7 @@ function Login() {
           onChange={(e) => setEmail(e.target.value)}
           required={true}
           autoComplete="email"
+            disabled={isLoading}
         />
 
         <AuthInput
@@ -87,6 +89,7 @@ function Login() {
           onChange={(e) => setPassword(e.target.value)}
           required={true}
           autoComplete="current-password"
+            disabled={isLoading}
         />
 
         <div className="flex items-center justify-between my-4 text-xs">
@@ -95,6 +98,7 @@ function Login() {
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
+                disabled={isLoading}
               className="w-3.5 h-3.5 rounded border-[#30363D] bg-[#0D1117] text-sky-500 focus:ring-0 cursor-pointer"
             />
             <span>Remember me</span>
@@ -110,14 +114,11 @@ function Login() {
         </AuthButton>
       </form>
 
-      <div className="mt-6 pt-5 border-t border-[#30363D] text-center">
-        <p className="text-xs text-slate-400">
-          Don't have an account?{" "}
-          <Link to="/register" className="font-semibold text-white hover:underline">
-            Sign up
-          </Link>
-        </p>
-      </div>
+    <AuthFooter
+  text="Don't have an account?"
+  linkText="Create one"
+  to="/auth/register"
+/>
     </AuthCard>
   );
 }

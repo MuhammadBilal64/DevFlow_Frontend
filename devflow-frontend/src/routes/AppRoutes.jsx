@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+
 import AuthRoutes from "./AuthRoutes";
 import ProtectedRoute from "./ProtectedRoute";
+
 import Dashboard from "../pages/Dashboard";
 
 function AppRoutes() {
@@ -8,7 +10,7 @@ function AppRoutes() {
     <Routes>
 
       <Route
-        path="/login/*"
+        path="/auth/*"
         element={<AuthRoutes />}
       />
 
@@ -23,7 +25,7 @@ function AppRoutes() {
 
       <Route
         path="*"
-        element={<Navigate to="/login" replace />}
+        element={<Navigate to="/auth/login" replace />}
       />
 
     </Routes>
