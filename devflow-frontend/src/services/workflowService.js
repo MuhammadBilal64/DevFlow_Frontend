@@ -1,35 +1,36 @@
 import api from "./api";
 
 /**
- * Workflows API Services (details.md MODULE 5)
+ * Workflows API Services (details.md MODULE 6)
+ * All endpoints are scoped under /api/projects/{projectId}/workflows
  */
 
-export const getWorkflows = async (params = {}) => {
-  const response = await api.get("/workflows", { params });
+export const getWorkflowsByProject = async (projectId, params = {}) => {
+  const response = await api.get(`/projects/${projectId}/workflows`, { params });
   return response.data;
 };
 
-export const getWorkflowById = async (workflowId) => {
-  const response = await api.get(`/workflows/${workflowId}`);
+export const getWorkflowById = async (projectId, workflowId) => {
+  const response = await api.get(`/projects/${projectId}/workflows/${workflowId}`);
   return response.data;
 };
 
-export const createWorkflow = async (data) => {
-  const response = await api.post("/workflows", data);
+export const createWorkflow = async (projectId, data) => {
+  const response = await api.post(`/projects/${projectId}/workflows`, data);
   return response.data;
 };
 
-export const updateWorkflow = async (workflowId, data) => {
-  const response = await api.put(`/workflows/${workflowId}`, data);
+export const updateWorkflow = async (projectId, workflowId, data) => {
+  const response = await api.put(`/projects/${projectId}/workflows/${workflowId}`, data);
   return response.data;
 };
 
-export const deleteWorkflow = async (workflowId) => {
-  const response = await api.delete(`/workflows/${workflowId}`);
+export const enableWorkflow = async (projectId, workflowId) => {
+  const response = await api.patch(`/projects/${projectId}/workflows/${workflowId}/enable`);
   return response.data;
 };
 
-export const toggleWorkflow = async (workflowId, isEnabled) => {
-  const response = await api.patch(`/workflows/${workflowId}/toggle`, { isEnabled });
+export const disableWorkflow = async (projectId, workflowId) => {
+  const response = await api.patch(`/projects/${projectId}/workflows/${workflowId}/disable`);
   return response.data;
 };

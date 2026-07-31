@@ -1,7 +1,7 @@
 import api from "./api";
 
 /**
- * Projects API Services (details.md MODULE 3)
+ * Projects & Project Members API Services (details.md MODULE 3 & 4)
  */
 
 export const getProjectsByWorkspace = async (workspaceId, params = {}) => {
@@ -24,7 +24,18 @@ export const updateProject = async (projectId, data) => {
   return response.data;
 };
 
-export const deleteProject = async (projectId) => {
-  const response = await api.delete(`/projects/${projectId}`);
+// Project Members Services
+export const addProjectMember = async (projectId, data) => {
+  const response = await api.post(`/projects/${projectId}/members`, data);
+  return response.data;
+};
+
+export const getProjectMembers = async (projectId) => {
+  const response = await api.get(`/projects/${projectId}/members`);
+  return response.data;
+};
+
+export const removeProjectMember = async (projectId, userId) => {
+  const response = await api.delete(`/projects/${projectId}/members/${userId}`);
   return response.data;
 };

@@ -1,40 +1,41 @@
 import api from "./api";
 
 /**
- * Tasks API Services (details.md MODULE 4)
+ * Tasks API Services (details.md MODULE 5)
+ * All endpoints are scoped under /api/projects/{projectId}/tasks
  */
 
 export const getTasksByProject = async (projectId, params = {}) => {
-  const response = await api.get(`/tasks/project/${projectId}`, { params });
+  const response = await api.get(`/projects/${projectId}/tasks`, { params });
   return response.data;
 };
 
-export const getTaskById = async (taskId) => {
-  const response = await api.get(`/tasks/${taskId}`);
+export const getTaskById = async (projectId, taskId) => {
+  const response = await api.get(`/projects/${projectId}/tasks/${taskId}`);
   return response.data;
 };
 
-export const createTask = async (data) => {
-  const response = await api.post("/tasks", data);
+export const createTask = async (projectId, data) => {
+  const response = await api.post(`/projects/${projectId}/tasks`, data);
   return response.data;
 };
 
-export const updateTask = async (taskId, data) => {
-  const response = await api.put(`/tasks/${taskId}`, data);
+export const updateTask = async (projectId, taskId, data) => {
+  const response = await api.put(`/projects/${projectId}/tasks/${taskId}`, data);
   return response.data;
 };
 
-export const updateTaskStatus = async (taskId, status) => {
-  const response = await api.patch(`/tasks/${taskId}/status`, { status });
+export const updateTaskStatus = async (projectId, taskId, status) => {
+  const response = await api.patch(`/projects/${projectId}/tasks/${taskId}/status`, { status });
   return response.data;
 };
 
-export const assignTask = async (taskId, assignedToUserId) => {
-  const response = await api.patch(`/tasks/${taskId}/assign`, { assignedToUserId });
+export const updateTaskAssignee = async (projectId, taskId, assignedToUserId) => {
+  const response = await api.patch(`/projects/${projectId}/tasks/${taskId}/assignee`, { assignedToUserId });
   return response.data;
 };
 
-export const deleteTask = async (taskId) => {
-  const response = await api.delete(`/tasks/${taskId}`);
+export const deleteTask = async (projectId, taskId) => {
+  const response = await api.delete(`/projects/${projectId}/tasks/${taskId}`);
   return response.data;
 };

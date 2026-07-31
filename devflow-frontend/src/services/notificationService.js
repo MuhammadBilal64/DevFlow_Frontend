@@ -1,7 +1,7 @@
 import api from "./api";
 
 /**
- * Notifications API Services (details.md MODULE 6)
+ * Notifications API Services (details.md MODULE 7)
  */
 
 export const getMyNotifications = async (params = {}) => {
@@ -9,12 +9,17 @@ export const getMyNotifications = async (params = {}) => {
   return response.data;
 };
 
+export const getUnreadNotificationCount = async () => {
+  const response = await api.get("/notifications/unread-count");
+  return response.data;
+};
+
 export const markNotificationAsRead = async (notificationId) => {
-  const response = await api.patch(`/notifications/${notificationId}/read`);
+  const response = await api.put(`/notifications/${notificationId}/read`);
   return response.data;
 };
 
 export const markAllNotificationsAsRead = async () => {
-  const response = await api.patch("/notifications/read-all");
+  const response = await api.put("/notifications/read-all");
   return response.data;
 };
