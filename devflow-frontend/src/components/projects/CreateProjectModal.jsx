@@ -13,14 +13,18 @@ export default function CreateProjectModal({ isOpen, onClose, onCreate, workspac
       setError("Project title is required.");
       return;
     }
+    if (!workspaceId) {
+      setError("No workspace selected. Please select a workspace first.");
+      return;
+    }
     setError("");
     setIsSubmitting(true);
 
     try {
       await onCreate({
-        name,
-        description,
-        workspaceId: workspaceId || 1,
+        name: name.trim(),
+        description: description.trim(),
+        workspaceId,
       });
       setName("");
       setDescription("");

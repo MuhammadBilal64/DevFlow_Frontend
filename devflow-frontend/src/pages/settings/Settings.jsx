@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   User,
   Building2,
@@ -23,14 +23,18 @@ export default function Settings() {
 
   // Profile Form State
   const [displayName, setDisplayName] = useState(
-    user?.name || (user?.email ? user.email.split("@")[0] : "Ali Raza")
+    user?.name || (user?.email ? user.email.split("@")[0] : "User")
   );
-  const [jobTitle, setJobTitle] = useState("Fullstack Engineer");
-  const [bio, setBio] = useState("Building scalable cloud applications & automated developer pipelines.");
+  const [jobTitle, setJobTitle] = useState("Developer");
+  const [bio, setBio] = useState("");
 
-  // Workspace Settings State
-  const [wsName, setWsName] = useState(currentWorkspace?.name || "DevFlow Workspace");
-  const [wsDesc, setWsDesc] = useState(currentWorkspace?.description || "Primary organization workspace");
+  const [wsName, setWsName] = useState(currentWorkspace?.name || "");
+  const [wsDesc, setWsDesc] = useState(currentWorkspace?.description || "");
+
+  useEffect(() => {
+    setWsName(currentWorkspace?.name || "");
+    setWsDesc(currentWorkspace?.description || "");
+  }, [currentWorkspace?.id, currentWorkspace?.name, currentWorkspace?.description]);
 
   // Security Form State
   const [currentPassword, setCurrentPassword] = useState("");
@@ -85,7 +89,7 @@ export default function Settings() {
     const newToken = {
       id: Date.now(),
       name: tokenName,
-      key: `df_live_${Math.random().toString(36).substring(2, 12)}...`,
+      key: `df_live_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}...`,
       created: new Date().toISOString().split("T")[0],
     };
     setApiTokens([newToken, ...apiTokens]);
@@ -279,7 +283,7 @@ export default function Settings() {
                     <p className="text-[11px] text-slate-500">Used for API scoping and webhook dispatchers</p>
                   </div>
                   <span className="rounded font-mono text-xs text-sky-400 bg-sky-500/10 px-2.5 py-1 border border-sky-500/20">
-                    #{currentWorkspace?.id || 1}
+                    #{currentWorkspace?.id ?? "—"}
                   </span>
                 </div>
               </div>

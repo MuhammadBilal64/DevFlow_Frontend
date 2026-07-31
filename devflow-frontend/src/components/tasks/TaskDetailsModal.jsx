@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { CheckSquare, Calendar, User, Trash2, Save, X, AlertCircle } from "lucide-react";
+import { Trash2, Save } from "lucide-react";
 import Modal from "../common/Modal";
 import { updateTask, updateTaskAssignee, deleteTask } from "../../services/taskService";
 import { getProjectMembers } from "../../services/projectService";
+import { localDateStringToISO, formatDateForInput } from "../../utils/dateUtils";
 
 export default function TaskDetailsModal({ isOpen, onClose, task, projectId, onTaskUpdated, onTaskDeleted }) {
   const [title, setTitle] = useState("");
@@ -12,14 +13,16 @@ export default function TaskDetailsModal({ isOpen, onClose, task, projectId, onT
   const [assigneeId, setAssigneeId] = useState("");
   const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (task && isOpen) {
       setTitle(task.title || "");
       setDescription(task.description || "");
       setPriority(task.priority ?? 1);
-      setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "");
+      setDueDate(formatDateForInput(task.dueDate));
       setAssigneeId(task.assignedToUserId ? String(task.assignedToUserId) : "");
+      setError("");
 
       if (projectId) {
         getProjectMembers(projectId)
@@ -37,13 +40,14 @@ export default function TaskDetailsModal({ isOpen, onClose, task, projectId, onT
     e.preventDefault();
     if (!task?.id || !projectId) return;
     setIsLoading(true);
+    setError("");
 
     try {
       await updateTask(projectId, task.id, {
-        title,
-        description,
+        title: title.trim(),
+        description: description.trim(),
         priority: parseInt(priority, 10),
-        dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+        dueDate: localDateStringToISO(dueDate),
       });
 
       if (assigneeId !== (task.assignedToUserId ? String(task.assignedToUserId) : "")) {
@@ -52,17 +56,16 @@ export default function TaskDetailsModal({ isOpen, onClose, task, projectId, onT
 
       onTaskUpdated({
         ...task,
-        title,
-        description,
+        title: title.trim(),
+        description: description.trim(),
         priority: parseInt(priority, 10),
-        dueDate,
+        dueDate: localDateStringToISO(dueDate),
         assignedToUserId: assigneeId ? parseInt(assigneeId, 10) : null,
       });
 
       onClose();
     } catch (err) {
-      console.warn("Task update completed locally:", err?.message || err);
-      onClose();
+      setError(err?.message || "Failed to save task changes.");
     } finally {
       setIsLoading(false);
     }
@@ -72,14 +75,16 @@ export default function TaskDetailsModal({ isOpen, onClose, task, projectId, onT
     if (!task?.id || !projectId) return;
     if (!window.confirm(`Are you sure you want to delete task "${task.title}"?`)) return;
 
+    setError("");
+    setIsLoading(true);
     try {
       await deleteTask(projectId, task.id);
       onTaskDeleted(task.id);
       onClose();
     } catch (err) {
-      console.warn("Deleted task locally:", err?.message || err);
-      onTaskDeleted(task.id);
-      onClose();
+      setError(err?.message || "Failed to delete task.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -88,6 +93,12 @@ export default function TaskDetailsModal({ isOpen, onClose, task, projectId, onT
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Task Details #${task.id}`}>
       <form onSubmit={handleSave} className="space-y-4 text-xs select-none">
+        {error && (
+          <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 p-3 text-xs text-rose-300">
+            {error}
+          </div>
+        )}
+
         <div>
           <label className="block font-medium text-slate-300 mb-1">Task Title</label>
           <input
@@ -154,7 +165,8 @@ export default function TaskDetailsModal({ isOpen, onClose, task, projectId, onT
           <button
             type="button"
             onClick={handleDelete}
-            className="flex items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-500/20 transition cursor-pointer"
+            disabled={isLoading}
+            className="flex items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-500/20 transition cursor-pointer disabled:opacity-50"
           >
             <Trash2 size={14} />
             <span>Delete Task</span>
@@ -163,7 +175,7 @@ export default function TaskDetailsModal({ isOpen, onClose, task, projectId, onT
           <button
             type="submit"
             disabled={isLoading}
-            className="flex items-center gap-1.5 rounded-lg bg-[#F0F6FC] px-4 py-2 text-xs font-semibold text-[#0D1117] hover:bg-white transition cursor-pointer"
+            className="flex items-center gap-1.5 rounded-lg bg-[#F0F6FC] px-4 py-2 text-xs font-semibold text-[#0D1117] hover:bg-white transition cursor-pointer disabled:opacity-50"
           >
             <Save size={14} />
             <span>Save Changes</span>

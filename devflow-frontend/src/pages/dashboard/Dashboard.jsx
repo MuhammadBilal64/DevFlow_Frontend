@@ -13,6 +13,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import StatCard from "../../components/dashboard/StatCard";
+import Skeleton from "../../components/common/Skeleton";
 import CreateProjectModal from "../../components/projects/CreateProjectModal";
 import CreateTaskModal from "../../components/tasks/CreateTaskModal";
 import CreateWorkflowModal from "../../components/workflows/CreateWorkflowModal";
@@ -29,6 +30,8 @@ function Dashboard() {
   const navigate = useNavigate();
 
   const [modalType, setModalType] = useState(null); // 'project', 'task', 'workflow', 'member'
+  const [isLoading, setIsLoading] = useState(true);
+  const [projects, setProjects] = useState([]);
 
   const [stats, setStats] = useState({
     projectsCount: 0,
@@ -39,120 +42,157 @@ function Dashboard() {
   const [recentProjects, setRecentProjects] = useState([]);
 
   useEffect(() => {
-    if (!currentWorkspace?.id) return;
+    if (!currentWorkspace?.id) {
+      setIsLoading(false);
+      setProjects([]);
+      setRecentProjects([]);
+      setStats({ projectsCount: 0, membersCount: 0, notificationsCount: 0 });
+      return;
+    }
+
+    let ignore = false;
+    setIsLoading(true);
 
     Promise.all([
-      getProjectsByWorkspace(currentWorkspace.id).catch(() => ({ data: [] })),
-      getWorkspaceMembers(currentWorkspace.id).catch(() => ({ data: [] })),
-      getUnreadNotificationCount().catch(() => ({ data: 0 })),
+      getProjectsByWorkspace(currentWorkspace.id).catch(() => ({ data: { items: [] } })),
+      getWorkspaceMembers(currentWorkspace.id).catch(() => ({ data: { items: [] } })),
+      getUnreadNotificationCount().catch(() => ({ data: { unreadCount: 0 } })),
     ]).then(([projRes, memberRes, notifRes]) => {
+      if (ignore) return;
+
       const projs = projRes?.data || projRes;
       const members = memberRes?.data || memberRes;
-      const notifs = notifRes?.data ?? notifRes ?? 0;
+      const notifs = notifRes?.data || notifRes;
 
       const pItems = Array.isArray(projs) ? projs : projs?.items ?? [];
       const mItems = Array.isArray(members) ? members : members?.items ?? [];
-      const nCount = typeof notifs === "number" ? notifs : 0;
+      const nCount = typeof notifs?.unreadCount === "number" ? notifs.unreadCount : 0;
 
+      setProjects(pItems);
       setStats({
         projectsCount: pItems.length,
         membersCount: mItems.length,
         notificationsCount: nCount,
       });
-
       setRecentProjects(pItems.slice(0, 4));
+      setIsLoading(false);
     });
+
+    return () => {
+      ignore = true;
+    };
   }, [currentWorkspace?.id]);
 
+  const defaultProjectId = projects[0]?.id ?? null;
   const userName = user?.name || (user?.email ? user.email.split("@")[0] : "Developer");
   const formattedName = userName.charAt(0).toUpperCase() + userName.slice(1);
 
+  const handleProjectCardKeyDown = (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      navigate("/projects");
+    }
+  };
+
   return (
     <div className="space-y-8 pb-10">
-      {/* Greeting Banner */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
           Welcome back, {formattedName} 👋
         </h1>
         <p className="mt-1 text-xs sm:text-sm text-slate-400">
           Overview and pipeline metrics for active workspace:{" "}
-          <span className="font-semibold text-[#F0F6FC]">{currentWorkspace?.name || "Active Workspace"}</span>
+          <span className="font-semibold text-[#F0F6FC]">{currentWorkspace?.name || "No workspace selected"}</span>
         </p>
       </div>
 
-      {/* Stat Cards Grid (4 Columns) */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Projects"
-          value={String(stats.projectsCount)}
-          icon={FolderKanban}
-          trend="Workspace active"
-          trendType="up"
-          iconBg="bg-sky-500/10"
-          iconColor="text-sky-400"
-        />
-        <StatCard
-          title="Tasks"
-          value="--"
-          icon={CheckSquare}
-          trend="Sprint active"
-          trendType="up"
-          iconBg="bg-emerald-500/10"
-          iconColor="text-emerald-400"
-        />
-        <StatCard
-          title="Members"
-          value={String(stats.membersCount)}
-          icon={Users}
-          trend="Team roster"
-          trendType="neutral"
-          iconBg="bg-purple-500/10"
-          iconColor="text-purple-400"
-        />
-        <StatCard
-          title="Notifications"
-          value={String(stats.notificationsCount)}
-          icon={Bell}
-          trend="Unread alerts"
-          trendType="down"
-          iconBg="bg-amber-500/10"
-          iconColor="text-amber-400"
-        />
-      </div>
+      {isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[1, 2, 3, 4].map((n) => (
+            <Skeleton key={n} className="h-28 w-full" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            title="Projects"
+            value={String(stats.projectsCount)}
+            icon={FolderKanban}
+            trend="Workspace active"
+            trendType="up"
+            iconBg="bg-sky-500/10"
+            iconColor="text-sky-400"
+          />
+          <StatCard
+            title="Tasks"
+            value="--"
+            icon={CheckSquare}
+            trend="Sprint active"
+            trendType="up"
+            iconBg="bg-emerald-500/10"
+            iconColor="text-emerald-400"
+          />
+          <StatCard
+            title="Members"
+            value={String(stats.membersCount)}
+            icon={Users}
+            trend="Team roster"
+            trendType="neutral"
+            iconBg="bg-purple-500/10"
+            iconColor="text-purple-400"
+          />
+          <StatCard
+            title="Notifications"
+            value={String(stats.notificationsCount)}
+            icon={Bell}
+            trend="Unread alerts"
+            trendType="down"
+            iconBg="bg-amber-500/10"
+            iconColor="text-amber-400"
+          />
+        </div>
+      )}
 
-      {/* Quick Action Controls */}
       <div className="rounded-xl border border-[#30363D] bg-[#161B22] p-5 space-y-3">
         <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
           Quick Workstation Actions
         </h3>
         <div className="flex flex-wrap items-center gap-3">
           <button
+            type="button"
             onClick={() => setModalType("project")}
-            className="flex items-center gap-2 rounded-lg bg-[#F0F6FC] px-4 py-2 text-xs font-semibold text-[#0D1117] hover:bg-white transition cursor-pointer"
+            disabled={!currentWorkspace?.id}
+            className="flex items-center gap-2 rounded-lg bg-[#F0F6FC] px-4 py-2 text-xs font-semibold text-[#0D1117] hover:bg-white transition cursor-pointer disabled:opacity-50"
           >
             <Plus size={14} />
             <span>Create Project</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setModalType("task")}
-            className="flex items-center gap-2 rounded-lg border border-[#30363D] bg-[#0D1117] px-4 py-2 text-xs font-medium text-slate-200 hover:border-slate-500 transition cursor-pointer"
+            disabled={!defaultProjectId}
+            className="flex items-center gap-2 rounded-lg border border-[#30363D] bg-[#0D1117] px-4 py-2 text-xs font-medium text-slate-200 hover:border-slate-500 transition cursor-pointer disabled:opacity-50"
           >
             <CheckSquare size={14} className="text-sky-400" />
             <span>Add Task</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setModalType("workflow")}
-            className="flex items-center gap-2 rounded-lg border border-[#30363D] bg-[#0D1117] px-4 py-2 text-xs font-medium text-slate-200 hover:border-slate-500 transition cursor-pointer"
+            disabled={!defaultProjectId}
+            className="flex items-center gap-2 rounded-lg border border-[#30363D] bg-[#0D1117] px-4 py-2 text-xs font-medium text-slate-200 hover:border-slate-500 transition cursor-pointer disabled:opacity-50"
           >
             <Workflow size={14} className="text-amber-400" />
             <span>New Workflow</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setModalType("member")}
-            className="flex items-center gap-2 rounded-lg border border-[#30363D] bg-[#0D1117] px-4 py-2 text-xs font-medium text-slate-200 hover:border-slate-500 transition cursor-pointer"
+            disabled={!currentWorkspace?.id}
+            className="flex items-center gap-2 rounded-lg border border-[#30363D] bg-[#0D1117] px-4 py-2 text-xs font-medium text-slate-200 hover:border-slate-500 transition cursor-pointer disabled:opacity-50"
           >
             <UserPlus size={14} className="text-purple-400" />
             <span>Invite Member</span>
@@ -160,11 +200,11 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Middle Section: Active Projects */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-bold text-white">Active Projects</h3>
           <button
+            type="button"
             onClick={() => navigate("/projects")}
             className="flex items-center gap-1.5 text-xs text-sky-400 hover:underline font-medium cursor-pointer"
           >
@@ -173,7 +213,13 @@ function Dashboard() {
           </button>
         </div>
 
-        {recentProjects.length === 0 ? (
+        {isLoading ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((n) => (
+              <Skeleton key={n} className="h-32 w-full" />
+            ))}
+          </div>
+        ) : recentProjects.length === 0 ? (
           <div className="rounded-xl border border-[#30363D] bg-[#161B22] p-8 text-center text-xs text-slate-400">
             No active projects found in this workspace. Click "Create Project" to get started.
           </div>
@@ -182,7 +228,10 @@ function Dashboard() {
             {recentProjects.map((p) => (
               <div
                 key={p.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => navigate("/projects")}
+                onKeyDown={handleProjectCardKeyDown}
                 className="rounded-xl border border-[#30363D] bg-[#161B22] p-4 space-y-2 hover:border-sky-500 transition cursor-pointer"
               >
                 <div className="flex items-center justify-between">
@@ -203,7 +252,6 @@ function Dashboard() {
         )}
       </div>
 
-      {/* Modals */}
       <CreateProjectModal
         isOpen={modalType === "project"}
         onClose={() => setModalType(null)}
@@ -217,7 +265,12 @@ function Dashboard() {
       <CreateTaskModal
         isOpen={modalType === "task"}
         onClose={() => setModalType(null)}
-        onCreate={async () => {
+        projectId={defaultProjectId}
+        onCreate={async (data) => {
+          if (!defaultProjectId) {
+            throw new Error("No project available. Create a project first.");
+          }
+          await createTask(defaultProjectId, data);
           setModalType(null);
         }}
       />
@@ -225,7 +278,12 @@ function Dashboard() {
       <CreateWorkflowModal
         isOpen={modalType === "workflow"}
         onClose={() => setModalType(null)}
-        onCreate={async () => {
+        projectId={defaultProjectId}
+        onCreate={async (data) => {
+          if (!defaultProjectId) {
+            throw new Error("No project available. Create a project first.");
+          }
+          await createWorkflow(defaultProjectId, data);
           setModalType(null);
         }}
       />
@@ -234,9 +292,10 @@ function Dashboard() {
         isOpen={modalType === "member"}
         onClose={() => setModalType(null)}
         onAddMember={async (data) => {
-          if (currentWorkspace?.id) {
-            await addWorkspaceMember(currentWorkspace.id, data);
+          if (!currentWorkspace?.id) {
+            throw new Error("No workspace selected. Please select a workspace first.");
           }
+          await addWorkspaceMember(currentWorkspace.id, data);
           setModalType(null);
         }}
       />

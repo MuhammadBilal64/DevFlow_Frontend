@@ -5,6 +5,7 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
 } from "../../services/notificationService";
+import { dispatchNotificationCountRefresh } from "../../utils/notificationEvents";
 import EmptyState from "../../components/common/EmptyState";
 import Skeleton from "../../components/common/Skeleton";
 
@@ -19,6 +20,7 @@ const iconMap = {
 function Notifications() {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [actionError, setActionError] = useState("");
 
   const fetchNotifications = useCallback(async () => {
     setIsLoading(true);
@@ -40,22 +42,37 @@ function Notifications() {
   }, [fetchNotifications]);
 
   const handleMarkAllRead = async () => {
+    const previousNotifications = notifications;
+    setActionError("");
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     try {
       await markAllNotificationsAsRead();
+      dispatchNotificationCountRefresh();
     } catch (err) {
-      console.warn("Marked all read locally:", err?.message || err);
+      setNotifications(previousNotifications);
+      setActionError(err?.message || "Failed to mark all notifications as read.");
     }
   };
 
   const handleMarkSingleRead = async (id) => {
+    const previousNotifications = notifications;
+    setActionError("");
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
     );
     try {
       await markNotificationAsRead(id);
+      dispatchNotificationCountRefresh();
     } catch (err) {
-      console.warn("Marked read locally:", err?.message || err);
+      setNotifications(previousNotifications);
+      setActionError(err?.message || "Failed to mark notification as read.");
+    }
+  };
+
+  const handleNotificationKeyDown = (event, item) => {
+    if (!item.isRead && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      handleMarkSingleRead(item.id);
     }
   };
 
@@ -73,6 +90,7 @@ function Notifications() {
 
         {notifications.length > 0 && (
           <button
+            type="button"
             onClick={handleMarkAllRead}
             className="flex items-center gap-2 rounded-xl border border-[#1F2937] bg-[#121721] px-3.5 py-2 text-xs font-semibold text-white hover:border-[#374151] transition active:scale-95"
           >
@@ -81,6 +99,12 @@ function Notifications() {
           </button>
         )}
       </div>
+
+      {actionError && (
+        <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 p-3 text-xs text-rose-300">
+          {actionError}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="space-y-3">
@@ -104,13 +128,16 @@ function Notifications() {
               : "Recent";
 
             return (
-              <div
+              <button
                 key={item.id}
+                type="button"
                 onClick={() => !item.isRead && handleMarkSingleRead(item.id)}
-                className={`flex items-start justify-between rounded-xl border p-4 transition cursor-pointer ${
+                onKeyDown={(event) => handleNotificationKeyDown(event, item)}
+                disabled={item.isRead}
+                className={`flex w-full items-start justify-between rounded-xl border p-4 text-left transition ${
                   item.isRead
-                    ? "border-[#1F2937]/40 bg-[#0B0F17]/30 opacity-75"
-                    : "border-[#1D63ED]/30 bg-[#0C2448]/20 hover:border-[#1D63ED]"
+                    ? "border-[#1F2937]/40 bg-[#0B0F17]/30 opacity-75 cursor-default"
+                    : "border-[#1D63ED]/30 bg-[#0C2448]/20 hover:border-[#1D63ED] cursor-pointer"
                 }`}
               >
                 <div className="flex items-start gap-3.5">
@@ -132,7 +159,7 @@ function Notifications() {
                   </div>
                 </div>
                 <span className="text-[11px] text-[#6B7280]">{timeStr}</span>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -142,5 +169,3 @@ function Notifications() {
 }
 
 export default Notifications;
-
-

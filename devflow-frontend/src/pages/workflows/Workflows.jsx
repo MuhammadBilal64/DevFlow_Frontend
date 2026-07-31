@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Workflow, Plus, Zap, Play, CheckCircle2, XCircle, FolderKanban } from "lucide-react";
+import { Workflow, Plus, Zap, CheckCircle2, XCircle, FolderKanban } from "lucide-react";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { getWorkflowsByProject, createWorkflow, enableWorkflow, disableWorkflow } from "../../services/workflowService";
 import { getProjectsByWorkspace } from "../../services/projectService";
@@ -20,6 +20,7 @@ function Workflows() {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   useEffect(() => {
     if (!currentWorkspace?.id) {
@@ -77,6 +78,7 @@ function Workflows() {
 
   const handleToggleEnable = async (workflow) => {
     const nextState = !workflow.isEnabled;
+    setActionError("");
 
     setWorkflows((prev) =>
       prev.map((w) => (w.id === workflow.id ? { ...w, isEnabled: nextState } : w))
@@ -91,7 +93,10 @@ function Workflows() {
         }
       }
     } catch (err) {
-      console.warn("Toggled workflow state locally:", err?.message || err);
+      setWorkflows((prev) =>
+        prev.map((w) => (w.id === workflow.id ? { ...w, isEnabled: workflow.isEnabled } : w))
+      );
+      setActionError(err?.message || "Failed to update workflow status.");
     }
   };
 
@@ -153,6 +158,12 @@ function Workflows() {
         </div>
       </div>
 
+      {actionError && (
+        <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 p-3 text-xs text-rose-300">
+          {actionError}
+        </div>
+      )}
+
       {/* Main Body: Skeleton / Empty State / Workflow Grid */}
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2">
@@ -211,10 +222,6 @@ function Workflows() {
 
               <div className="flex items-center justify-between border-t border-[#1F2937] pt-3 text-xs text-[#9CA3AF]">
                 <span>{flow.executions ?? 0} Executions</span>
-                <button className="flex items-center gap-1 text-[#1D63ED] hover:underline font-semibold">
-                  <Play size={12} />
-                  <span>Trigger Rule</span>
-                </button>
               </div>
             </div>
           ))}

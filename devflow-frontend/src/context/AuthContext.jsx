@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from "react";
 import { getUserFromToken } from "../utils/tokenUtils";
+import { logout as logoutApi } from "../services/authService";
 
 const AuthContext = createContext();
 
@@ -25,6 +26,11 @@ export function AuthProvider({ children }) {
       throw new Error("Invalid authentication response: Missing access token.");
     }
 
+    const decodedUser = getUserFromToken(tokenVal);
+    if (!decodedUser) {
+      throw new Error("Invalid authentication response: Unable to decode user from token.");
+    }
+
     localStorage.setItem("accessToken", tokenVal);
     localStorage.setItem("token", tokenVal);
     if (refreshVal) {
@@ -33,18 +39,27 @@ export function AuthProvider({ children }) {
     }
 
     setAccessToken(tokenVal);
-    const decodedUser = getUserFromToken(tokenVal);
     setUser(decodedUser);
   };
 
-  const logout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
+  const logout = async () => {
+    const refreshTokenVal = refreshToken || localStorage.getItem("refreshToken");
+    try {
+      if (refreshTokenVal) {
+        await logoutApi(refreshTokenVal);
+      }
+    } catch {
+      // Still clear local auth state even if server logout fails
+    } finally {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
 
-    setUser(null);
-    setAccessToken(null);
-    setRefreshToken(null);
+      setUser(null);
+      setAccessToken(null);
+      setRefreshToken(null);
+    }
   };
 
   const value = {
@@ -64,4 +79,4 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   return useContext(AuthContext);
-}
+}

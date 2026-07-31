@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Modal from "../common/Modal";
+import { localDateStringToISO } from "../../utils/dateUtils";
 
 export default function CreateTaskModal({ isOpen, onClose, onCreate, projectId }) {
   const [title, setTitle] = useState("");
@@ -20,10 +21,10 @@ export default function CreateTaskModal({ isOpen, onClose, onCreate, projectId }
 
     try {
       await onCreate({
-        title,
-        description,
+        title: title.trim(),
+        description: description.trim(),
         priority: parseInt(priority, 10),
-        dueDate: dueDate ? new Date(dueDate).toISOString() : new Date().toISOString(),
+        dueDate: localDateStringToISO(dueDate),
       });
       setTitle("");
       setDescription("");

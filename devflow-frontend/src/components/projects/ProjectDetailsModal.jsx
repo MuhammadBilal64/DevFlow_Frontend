@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { FolderKanban, CheckSquare, Users, Plus, X, Calendar, Shield } from "lucide-react";
 import Modal from "../common/Modal";
 import { getTasksByProject } from "../../services/taskService";
 import { getProjectMembers, addProjectMember } from "../../services/projectService";
+import Skeleton from "../common/Skeleton";
 
 export default function ProjectDetailsModal({ isOpen, onClose, project }) {
   const [activeTab, setActiveTab] = useState("overview");
@@ -11,26 +11,38 @@ export default function ProjectDetailsModal({ isOpen, onClose, project }) {
   const [isLoading, setIsLoading] = useState(false);
   const [memberUserId, setMemberUserId] = useState("");
   const [memberRole, setMemberRole] = useState(2); // 2 = Member
+  const [memberError, setMemberError] = useState("");
 
   useEffect(() => {
     if (!project?.id || !isOpen) return;
+
+    let ignore = false;
     setIsLoading(true);
+    setMemberError("");
 
     Promise.all([
       getTasksByProject(project.id).catch(() => ({ data: [] })),
       getProjectMembers(project.id).catch(() => ({ data: [] })),
     ]).then(([taskRes, memberRes]) => {
+      if (ignore) return;
+
       const taskData = taskRes?.data || taskRes;
       const memberData = memberRes?.data || memberRes;
       setTasks(Array.isArray(taskData) ? taskData : taskData?.items ?? []);
       setMembers(Array.isArray(memberData) ? memberData : memberData?.items ?? []);
       setIsLoading(false);
     });
+
+    return () => {
+      ignore = true;
+    };
   }, [project?.id, isOpen]);
 
   const handleAddMember = async (e) => {
     e.preventDefault();
     if (!memberUserId || !project?.id) return;
+    setMemberError("");
+
     try {
       await addProjectMember(project.id, {
         userId: parseInt(memberUserId, 10),
@@ -42,7 +54,7 @@ export default function ProjectDetailsModal({ isOpen, onClose, project }) {
       ]);
       setMemberUserId("");
     } catch (err) {
-      console.warn("Added member locally:", err?.message || err);
+      setMemberError(err?.message || "Failed to add member.");
     }
   };
 
@@ -51,11 +63,11 @@ export default function ProjectDetailsModal({ isOpen, onClose, project }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={project.name || "Project Details"}>
       <div className="space-y-4">
-        {/* Navigation Tabs */}
         <div className="flex border-b border-[#1F2937] gap-4 text-xs font-medium">
           {["overview", "tasks", "members"].map((tab) => (
             <button
               key={tab}
+              type="button"
               onClick={() => setActiveTab(tab)}
               className={`pb-2.5 capitalize border-b-2 transition ${
                 activeTab === tab
@@ -68,7 +80,6 @@ export default function ProjectDetailsModal({ isOpen, onClose, project }) {
           ))}
         </div>
 
-        {/* Tab Content */}
         {activeTab === "overview" && (
           <div className="space-y-4 pt-1">
             <div className="rounded-xl border border-[#1F2937] bg-[#0B0F17] p-4">
@@ -91,7 +102,7 @@ export default function ProjectDetailsModal({ isOpen, onClose, project }) {
               <div className="rounded-xl border border-[#1F2937] bg-[#0B0F17] p-3.5">
                 <span className="text-[10px] text-[#6B7280]">Workspace ID</span>
                 <p className="text-xs font-semibold text-white mt-0.5">
-                  #{project.workspaceId || 1}
+                  #{project.workspaceId || "—"}
                 </p>
               </div>
             </div>
@@ -100,7 +111,13 @@ export default function ProjectDetailsModal({ isOpen, onClose, project }) {
 
         {activeTab === "tasks" && (
           <div className="space-y-2 pt-1 max-h-60 overflow-y-auto">
-            {tasks.length === 0 ? (
+            {isLoading ? (
+              <div className="space-y-2">
+                {[1, 2].map((n) => (
+                  <Skeleton key={n} className="h-12 w-full" />
+                ))}
+              </div>
+            ) : tasks.length === 0 ? (
               <div className="py-8 text-center text-xs text-slate-500">
                 No tasks found in this project.
               </div>
@@ -122,6 +139,12 @@ export default function ProjectDetailsModal({ isOpen, onClose, project }) {
 
         {activeTab === "members" && (
           <div className="space-y-3 pt-1">
+            {memberError && (
+              <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 p-3 text-xs text-rose-300">
+                {memberError}
+              </div>
+            )}
+
             <form onSubmit={handleAddMember} className="flex gap-2">
               <input
                 type="number"
@@ -139,7 +162,13 @@ export default function ProjectDetailsModal({ isOpen, onClose, project }) {
             </form>
 
             <div className="space-y-2 max-h-48 overflow-y-auto">
-              {members.length === 0 ? (
+              {isLoading ? (
+                <div className="space-y-2">
+                  {[1, 2].map((n) => (
+                    <Skeleton key={n} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : members.length === 0 ? (
                 <div className="py-6 text-center text-xs text-slate-500">
                   No explicit members assigned yet.
                 </div>

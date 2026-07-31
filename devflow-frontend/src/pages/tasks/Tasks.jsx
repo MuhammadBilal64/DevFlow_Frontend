@@ -7,6 +7,12 @@ import CreateTaskModal from "../../components/tasks/CreateTaskModal";
 import TaskDetailsModal from "../../components/tasks/TaskDetailsModal";
 import EmptyState from "../../components/common/EmptyState";
 import Skeleton from "../../components/common/Skeleton";
+import { formatDateForDisplay } from "../../utils/dateUtils";
+
+const normalizeStatus = (status) => {
+  const value = Number(status);
+  return value >= 0 && value <= 2 ? value : 0;
+};
 
 const priorityBadges = {
   0: { label: "Low", className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
@@ -22,6 +28,7 @@ function Tasks() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [actionError, setActionError] = useState("");
 
   // Fetch projects in workspace
   useEffect(() => {
@@ -82,6 +89,8 @@ function Tasks() {
   // Status Change Handler (Kanban status transition)
   const handleStatusChange = async (taskId, newStatus, e) => {
     e.stopPropagation();
+    const previousTasks = tasks;
+    setActionError("");
     setTasks((prev) =>
       prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
     );
@@ -91,7 +100,8 @@ function Tasks() {
         await updateTaskStatus(selectedProjectId, taskId, newStatus);
       }
     } catch (err) {
-      console.warn("Updated status locally:", err?.message || err);
+      setTasks(previousTasks);
+      setActionError(err?.message || "Failed to update task status.");
     }
   };
 
@@ -168,6 +178,12 @@ function Tasks() {
         </div>
       </div>
 
+      {actionError && (
+        <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 p-3 text-xs text-rose-300">
+          {actionError}
+        </div>
+      )}
+
       {/* Main Body State: Loading / No Projects / Kanban Board */}
       {isLoading ? (
         <div className="grid gap-6 md:grid-cols-3">
@@ -192,7 +208,7 @@ function Tasks() {
       ) : (
         <div className="grid gap-6 md:grid-cols-3">
           {columns.map((col) => {
-            const colTasks = tasks.filter((t) => Number(t.status) === col.statusVal);
+            const colTasks = tasks.filter((t) => normalizeStatus(t.status) === col.statusVal);
 
             return (
               <div
@@ -218,9 +234,7 @@ function Tasks() {
                   ) : (
                     colTasks.map((task) => {
                       const priorityInfo = priorityBadges[task.priority ?? 1] || priorityBadges[1];
-                      const formattedDate = task.dueDate
-                        ? new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-                        : "No due date";
+                      const formattedDate = formatDateForDisplay(task.dueDate);
 
                       return (
                         <div

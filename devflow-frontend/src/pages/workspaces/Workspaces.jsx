@@ -19,6 +19,7 @@ function Workspaces() {
   const [isCreateWsOpen, setIsCreateWsOpen] = useState(false);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [membersLoading, setMembersLoading] = useState(true);
+  const [memberError, setMemberError] = useState("");
 
   const fetchMembers = useCallback(async () => {
     if (!currentWorkspace?.id) {
@@ -56,13 +57,16 @@ function Workspaces() {
   };
 
   const handleRemoveMember = async (memberId) => {
+    const previousMembers = members;
+    setMemberError("");
     setMembers((prev) => prev.filter((m) => m.id !== memberId && m.userId !== memberId));
     try {
       if (currentWorkspace?.id) {
         await removeWorkspaceMember(currentWorkspace.id, memberId);
       }
     } catch (err) {
-      console.warn("Removed member locally:", err?.message || err);
+      setMembers(previousMembers);
+      setMemberError(err?.message || "Failed to remove member.");
     }
   };
 
@@ -168,6 +172,12 @@ function Workspaces() {
           </button>
         </div>
 
+        {memberError && (
+          <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 p-3 text-xs text-rose-300">
+            {memberError}
+          </div>
+        )}
+
         {membersLoading ? (
           <div className="space-y-3">
             {[1, 2].map((n) => (
@@ -241,4 +251,4 @@ function Workspaces() {
 }
 
 export default Workspaces;
-
+

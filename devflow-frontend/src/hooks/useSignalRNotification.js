@@ -1,35 +1,34 @@
 import { useEffect, useRef } from "react";
 import * as signalR from "@microsoft/signalr";
+import { useAuth } from "../context/AuthContext";
 
 /**
  * Custom hook to manage SignalR WebSocket connection to /notificationHub
- * (details.md Section 4 & Module 7)
  */
 export const useSignalRNotification = (onNotificationReceived) => {
   const connectionRef = useRef(null);
   const callbackRef = useRef(onNotificationReceived);
+  const { accessToken } = useAuth();
 
-  // Keep callbackRef up to date without triggering reconnection
   useEffect(() => {
     callbackRef.current = onNotificationReceived;
   }, [onNotificationReceived]);
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
-    if (!token) return;
+    if (!accessToken) return;
 
     const hubUrl = import.meta.env.VITE_SIGNALR_HUB_URL || "https://localhost:7106/notificationHub";
 
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(hubUrl, {
-        accessTokenFactory: () => localStorage.getItem("accessToken") || localStorage.getItem("token") || "",
+        accessTokenFactory: () =>
+          localStorage.getItem("accessToken") || localStorage.getItem("token") || "",
       })
       .withAutomaticReconnect()
-      .configureLogging(signalR.LogLevel.None)
+      .configureLogging(signalR.LogLevel.Warning)
       .build();
 
     connection.on("ReceiveNotification", (notification) => {
-      console.log("🔔 Real-time notification received via SignalR:", notification);
       if (callbackRef.current) {
         callbackRef.current(notification);
       }
@@ -38,10 +37,10 @@ export const useSignalRNotification = (onNotificationReceived) => {
     connection
       .start()
       .then(() => {
-        console.log("Connected to SignalR Notification Hub");
+        console.info("Connected to SignalR Notification Hub");
       })
       .catch((err) => {
-        // Silent background warning
+        console.error("SignalR connection failed:", err?.message || err);
       });
 
     connectionRef.current = connection;
@@ -49,10 +48,10 @@ export const useSignalRNotification = (onNotificationReceived) => {
     return () => {
       if (connectionRef.current) {
         connectionRef.current.stop();
+        connectionRef.current = null;
       }
     };
-  }, []);
+  }, [accessToken]);
 };
-
 
 export default useSignalRNotification;

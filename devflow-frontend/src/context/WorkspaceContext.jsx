@@ -13,14 +13,9 @@ import { useAuth } from "./AuthContext";
 
 const WorkspaceContext = createContext(null);
 
-const DEFAULT_WORKSPACES = [
-  { id: 1, name: "Acme Corporation", description: "Default Organization Workspace" },
-  { id: 2, name: "DevFlow Platform", description: "Internal engineering projects" },
-];
-
 export function WorkspaceProvider({ children }) {
-  const [workspaces, setWorkspaces] = useState(DEFAULT_WORKSPACES);
-  const [currentWorkspace, setCurrentWorkspace] = useState(DEFAULT_WORKSPACES[0]);
+  const [workspaces, setWorkspaces] = useState([]);
+  const [currentWorkspace, setCurrentWorkspace] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
 
@@ -30,8 +25,7 @@ export function WorkspaceProvider({ children }) {
 
     try {
       const response = await getMyWorkspaces();
-      
-      // Unwrap items from ApiResponse<PagedResult<T>> or direct PagedResult/Array
+
       const rawData = response?.data || response;
       const items = Array.isArray(rawData)
         ? rawData
@@ -41,16 +35,17 @@ export function WorkspaceProvider({ children }) {
         ? response.items
         : [];
 
-      if (items.length > 0) {
-        setWorkspaces(items);
-        setCurrentWorkspace((prev) => {
-          if (!prev) return items[0];
-          const found = items.find((w) => w.id === prev.id);
-          return found || items[0];
-        });
-      }
+      setWorkspaces(items);
+      setCurrentWorkspace((prev) => {
+        if (items.length === 0) return null;
+        if (!prev) return items[0];
+        const found = items.find((w) => w.id === prev.id);
+        return found || items[0];
+      });
     } catch (error) {
-      console.warn("Could not fetch workspaces from API, using default workspace:", error?.message || error);
+      console.warn("Could not fetch workspaces from API:", error?.message || error);
+      setWorkspaces([]);
+      setCurrentWorkspace(null);
     } finally {
       setIsLoading(false);
     }
@@ -78,6 +73,9 @@ export function WorkspaceProvider({ children }) {
   useEffect(() => {
     if (user) {
       loadWorkspaces();
+    } else {
+      setWorkspaces([]);
+      setCurrentWorkspace(null);
     }
   }, [user, loadWorkspaces]);
 
@@ -103,4 +101,4 @@ export function useWorkspace() {
     throw new Error("useWorkspace must be used within WorkspaceProvider.");
   }
   return context;
-}
+}
