@@ -1,409 +1,306 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FolderKanban,
   CheckSquare,
   Users,
   Bell,
-  CheckCircle2,
-  UserPlus,
-  Workflow,
-  FileText,
-  Calendar,
   Plus,
+  ArrowRight,
+  Workflow,
+  UserPlus,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useWorkspace } from "../../context/WorkspaceContext";
 import StatCard from "../../components/dashboard/StatCard";
-
-const recentProjects = [
-  {
-    id: 1,
-    name: "DevFlow Platform",
-    description: "Internal platform development",
-    status: "In Progress",
-    statusColor: "bg-[#0C2448] text-[#38BDF8] border-[#1D63ED]/30",
-    progress: 68,
-    barColor: "bg-[#1D63ED]",
-    time: "2h ago",
-    avatar: "D",
-    avatarBg: "bg-[#1D63ED]/20 text-[#38BDF8]",
-  },
-  {
-    id: 2,
-    name: "Mobile App",
-    description: "Cross-platform mobile application",
-    status: "Planning",
-    statusColor: "bg-[#0B3B26] text-[#34D399] border-[#10B981]/30",
-    progress: 24,
-    barColor: "bg-[#34D399]",
-    time: "1d ago",
-    avatar: "M",
-    avatarBg: "bg-[#10B981]/20 text-[#34D399]",
-  },
-  {
-    id: 3,
-    name: "Website Redesign",
-    description: "Marketing website overhaul",
-    status: "In Progress",
-    statusColor: "bg-[#0C2448] text-[#38BDF8] border-[#1D63ED]/30",
-    progress: 45,
-    barColor: "bg-[#A855F7]",
-    time: "2d ago",
-    avatar: "W",
-    avatarBg: "bg-[#A855F7]/20 text-[#C084FC]",
-  },
-  {
-    id: 4,
-    name: "API Gateway",
-    description: "Backend API infrastructure",
-    status: "Review",
-    statusColor: "bg-[#3D2109] text-[#FBBF24] border-[#F59E0B]/30",
-    progress: 80,
-    barColor: "bg-[#F59E0B]",
-    time: "3d ago",
-    avatar: "A",
-    avatarBg: "bg-[#F59E0B]/20 text-[#FBBF24]",
-  },
-];
-
-const activityFeed = [
-  {
-    id: 1,
-    user: "Ali Raza",
-    action: "created a new project",
-    target: '"API Gateway"',
-    time: "2h ago",
-    icon: Users,
-    iconBg: "bg-[#0C2448] text-[#38BDF8]",
-  },
-  {
-    id: 2,
-    user: "Task",
-    action: '"Design dashboard UI"',
-    target: "completed by Fatima Noor",
-    time: "4h ago",
-    icon: CheckCircle2,
-    iconBg: "bg-[#0B3B26] text-[#34D399]",
-  },
-  {
-    id: 3,
-    user: "Sara Khan",
-    action: "joined the workspace",
-    target: "",
-    time: "6h ago",
-    icon: UserPlus,
-    iconBg: "bg-[#2D164B] text-[#C084FC]",
-  },
-  {
-    id: 4,
-    user: "Workflow",
-    action: '"Task Assignment"',
-    target: "executed successfully",
-    time: "8h ago",
-    icon: Workflow,
-    iconBg: "bg-[#3D2109] text-[#FBBF24]",
-  },
-  {
-    id: 5,
-    user: "Report",
-    action: '"Weekly Summary"',
-    target: "generated",
-    time: "1d ago",
-    icon: FileText,
-    iconBg: "bg-[#0C2448] text-[#38BDF8]",
-  },
-];
+import Skeleton from "../../components/common/Skeleton";
+import CreateProjectModal from "../../components/projects/CreateProjectModal";
+import CreateTaskModal from "../../components/tasks/CreateTaskModal";
+import CreateWorkflowModal from "../../components/workflows/CreateWorkflowModal";
+import AddWorkspaceMemberModal from "../../components/workspaces/AddWorkspaceMemberModal";
+import { createProject, getProjectsByWorkspace } from "../../services/projectService";
+import { createTask } from "../../services/taskService";
+import { createWorkflow } from "../../services/workflowService";
+import { addWorkspaceMember, getWorkspaceMembers } from "../../services/workspaceService";
+import { getUnreadNotificationCount } from "../../services/notificationService";
 
 function Dashboard() {
   const { user } = useAuth();
-  const [activeTaskTab, setActiveTaskTab] = useState("Upcoming");
+  const { currentWorkspace } = useWorkspace();
+  const navigate = useNavigate();
 
-  const userName = user?.email
-    ? user.email.split("@")[0]
-    : "Bilal";
-  const formattedName =
-    userName.charAt(0).toUpperCase() + userName.slice(1);
+  const [modalType, setModalType] = useState(null); // 'project', 'task', 'workflow', 'member'
+  const [isLoading, setIsLoading] = useState(true);
+  const [projects, setProjects] = useState([]);
+
+  const [stats, setStats] = useState({
+    projectsCount: 0,
+    membersCount: 0,
+    notificationsCount: 0,
+  });
+
+  const [recentProjects, setRecentProjects] = useState([]);
+
+  useEffect(() => {
+    if (!currentWorkspace?.id) {
+      setIsLoading(false);
+      setProjects([]);
+      setRecentProjects([]);
+      setStats({ projectsCount: 0, membersCount: 0, notificationsCount: 0 });
+      return;
+    }
+
+    let ignore = false;
+    setIsLoading(true);
+
+    Promise.all([
+      getProjectsByWorkspace(currentWorkspace.id).catch(() => ({ data: { items: [] } })),
+      getWorkspaceMembers(currentWorkspace.id).catch(() => ({ data: { items: [] } })),
+      getUnreadNotificationCount().catch(() => ({ data: { unreadCount: 0 } })),
+    ]).then(([projRes, memberRes, notifRes]) => {
+      if (ignore) return;
+
+      const projs = projRes?.data || projRes;
+      const members = memberRes?.data || memberRes;
+      const notifs = notifRes?.data || notifRes;
+
+      const pItems = Array.isArray(projs) ? projs : projs?.items ?? [];
+      const mItems = Array.isArray(members) ? members : members?.items ?? [];
+      const nCount = typeof notifs?.unreadCount === "number" ? notifs.unreadCount : 0;
+
+      setProjects(pItems);
+      setStats({
+        projectsCount: pItems.length,
+        membersCount: mItems.length,
+        notificationsCount: nCount,
+      });
+      setRecentProjects(pItems.slice(0, 4));
+      setIsLoading(false);
+    });
+
+    return () => {
+      ignore = true;
+    };
+  }, [currentWorkspace?.id]);
+
+  const defaultProjectId = projects[0]?.id ?? null;
+  const userName = user?.name || (user?.email ? user.email.split("@")[0] : "Developer");
+  const formattedName = userName.charAt(0).toUpperCase() + userName.slice(1);
+
+  const handleProjectCardKeyDown = (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      navigate("/projects");
+    }
+  };
 
   return (
     <div className="space-y-8 pb-10">
-      {/* Greeting Banner */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-          Good evening, {formattedName} 👋
+          Welcome back, {formattedName} 👋
         </h1>
-        <p className="mt-1 text-sm text-[#9CA3AF]">
-          Here's what's happening in your workspace today.
+        <p className="mt-1 text-xs sm:text-sm text-slate-400">
+          Overview and pipeline metrics for active workspace:{" "}
+          <span className="font-semibold text-[#F0F6FC]">{currentWorkspace?.name || "No workspace selected"}</span>
         </p>
       </div>
 
-      {/* Stat Cards Grid (4 Columns) */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Projects"
-          value="12"
-          icon={FolderKanban}
-          trend="↑ 2 this week"
-          trendType="up"
-          iconBg="bg-[#0C2448]"
-          iconColor="text-[#38BDF8]"
-        />
-        <StatCard
-          title="Tasks"
-          value="32"
-          icon={CheckSquare}
-          trend="↑ 6 this week"
-          trendType="up"
-          iconBg="bg-[#0B3B26]"
-          iconColor="text-[#34D399]"
-        />
-        <StatCard
-          title="Members"
-          value="8"
-          icon={Users}
-          trend="— No change"
-          trendType="neutral"
-          iconBg="bg-[#2D164B]"
-          iconColor="text-[#C084FC]"
-        />
-        <StatCard
-          title="Notifications"
-          value="7"
-          icon={Bell}
-          trend="↓ 2 this week"
-          trendType="down"
-          iconBg="bg-[#3D2109]"
-          iconColor="text-[#FBBF24]"
-        />
+      {isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[1, 2, 3, 4].map((n) => (
+            <Skeleton key={n} className="h-28 w-full" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            title="Projects"
+            value={String(stats.projectsCount)}
+            icon={FolderKanban}
+            trend="Workspace active"
+            trendType="up"
+            iconBg="bg-sky-500/10"
+            iconColor="text-sky-400"
+          />
+          <StatCard
+            title="Tasks"
+            value="--"
+            icon={CheckSquare}
+            trend="Sprint active"
+            trendType="up"
+            iconBg="bg-emerald-500/10"
+            iconColor="text-emerald-400"
+          />
+          <StatCard
+            title="Members"
+            value={String(stats.membersCount)}
+            icon={Users}
+            trend="Team roster"
+            trendType="neutral"
+            iconBg="bg-purple-500/10"
+            iconColor="text-purple-400"
+          />
+          <StatCard
+            title="Notifications"
+            value={String(stats.notificationsCount)}
+            icon={Bell}
+            trend="Unread alerts"
+            trendType="down"
+            iconBg="bg-amber-500/10"
+            iconColor="text-amber-400"
+          />
+        </div>
+      )}
+
+      <div className="rounded-xl border border-[#30363D] bg-[#161B22] p-5 space-y-3">
+        <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
+          Quick Workstation Actions
+        </h3>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setModalType("project")}
+            disabled={!currentWorkspace?.id}
+            className="flex items-center gap-2 rounded-lg bg-[#F0F6FC] px-4 py-2 text-xs font-semibold text-[#0D1117] hover:bg-white transition cursor-pointer disabled:opacity-50"
+          >
+            <Plus size={14} />
+            <span>Create Project</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setModalType("task")}
+            disabled={!defaultProjectId}
+            className="flex items-center gap-2 rounded-lg border border-[#30363D] bg-[#0D1117] px-4 py-2 text-xs font-medium text-slate-200 hover:border-slate-500 transition cursor-pointer disabled:opacity-50"
+          >
+            <CheckSquare size={14} className="text-sky-400" />
+            <span>Add Task</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setModalType("workflow")}
+            disabled={!defaultProjectId}
+            className="flex items-center gap-2 rounded-lg border border-[#30363D] bg-[#0D1117] px-4 py-2 text-xs font-medium text-slate-200 hover:border-slate-500 transition cursor-pointer disabled:opacity-50"
+          >
+            <Workflow size={14} className="text-amber-400" />
+            <span>New Workflow</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setModalType("member")}
+            disabled={!currentWorkspace?.id}
+            className="flex items-center gap-2 rounded-lg border border-[#30363D] bg-[#0D1117] px-4 py-2 text-xs font-medium text-slate-200 hover:border-slate-500 transition cursor-pointer disabled:opacity-50"
+          >
+            <UserPlus size={14} className="text-purple-400" />
+            <span>Invite Member</span>
+          </button>
+        </div>
       </div>
 
-      {/* Middle Section: Recent Projects & Activity Feed */}
-      <div className="grid gap-6 lg:grid-cols-12">
-        {/* Recent Projects Card (7 Cols) */}
-        <div className="lg:col-span-7 rounded-2xl border border-[#1F2937] bg-[#121721] p-6 shadow-sm">
-          <div className="flex items-center justify-between pb-4">
-            <h2 className="text-base font-semibold text-white">
-              Recent Projects
-            </h2>
-            <button className="text-xs font-semibold text-[#1D63ED] hover:underline">
-              View all
-            </button>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold text-white">Active Projects</h3>
+          <button
+            type="button"
+            onClick={() => navigate("/projects")}
+            className="flex items-center gap-1.5 text-xs text-sky-400 hover:underline font-medium cursor-pointer"
+          >
+            <span>View All Projects</span>
+            <ArrowRight size={14} />
+          </button>
+        </div>
+
+        {isLoading ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((n) => (
+              <Skeleton key={n} className="h-32 w-full" />
+            ))}
           </div>
-
-          <div className="space-y-4">
-            {recentProjects.map((project) => (
+        ) : recentProjects.length === 0 ? (
+          <div className="rounded-xl border border-[#30363D] bg-[#161B22] p-8 text-center text-xs text-slate-400">
+            No active projects found in this workspace. Click "Create Project" to get started.
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {recentProjects.map((p) => (
               <div
-                key={project.id}
-                className="flex items-center justify-between rounded-xl border border-[#1F2937]/60 bg-[#0B0F17]/50 p-3.5 transition hover:border-[#374151]"
+                key={p.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate("/projects")}
+                onKeyDown={handleProjectCardKeyDown}
+                className="rounded-xl border border-[#30363D] bg-[#161B22] p-4 space-y-2 hover:border-sky-500 transition cursor-pointer"
               >
-                <div className="flex items-center gap-3.5">
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl font-bold text-sm ${project.avatarBg}`}
-                  >
-                    {project.avatar}
+                <div className="flex items-center justify-between">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                    <FolderKanban size={16} />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-white">
-                      {project.name}
-                    </h3>
-                    <p className="text-xs text-[#6B7280]">
-                      {project.description}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <span
-                    className={`rounded-lg border px-2.5 py-1 text-[11px] font-medium ${project.statusColor}`}
-                  >
-                    {project.status}
-                  </span>
-
-                  <div className="hidden sm:flex items-center gap-2 w-28">
-                    <span className="text-xs font-medium text-[#9CA3AF] w-8">
-                      {project.progress}%
-                    </span>
-                    <div className="h-1.5 flex-1 rounded-full bg-[#1F2937] overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${project.barColor}`}
-                        style={{ width: `${project.progress}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <span className="text-xs text-[#6B7280]">
-                    {project.time}
+                  <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                    {p.status || "Active"}
                   </span>
                 </div>
+                <h4 className="text-xs font-bold text-white">{p.name}</h4>
+                <p className="text-[11px] text-slate-400 line-clamp-2">
+                  {p.description || "Workspace project"}
+                </p>
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Activity Feed Card (5 Cols) */}
-        <div className="lg:col-span-5 rounded-2xl border border-[#1F2937] bg-[#121721] p-6 shadow-sm">
-          <div className="flex items-center justify-between pb-4">
-            <h2 className="text-base font-semibold text-white">
-              Activity Feed
-            </h2>
-            <button className="text-xs font-semibold text-[#1D63ED] hover:underline">
-              View all
-            </button>
-          </div>
-
-          <div className="relative space-y-4 pl-2 before:absolute before:left-[19px] before:top-3 before:bottom-3 before:w-[2px] before:bg-[#1F2937]">
-            {activityFeed.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.id}
-                  className="relative flex items-start justify-between gap-3 text-xs"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full ring-4 ring-[#121721] ${item.iconBg}`}
-                    >
-                      <Icon size={14} />
-                    </div>
-                    <div>
-                      <p className="text-white">
-                        <span className="font-semibold">{item.user}</span>{" "}
-                        <span className="text-[#9CA3AF]">{item.action}</span>{" "}
-                        <span className="font-semibold text-white">
-                          {item.target}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-[#6B7280] whitespace-nowrap text-[11px]">
-                    {item.time}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Bottom Section: My Tasks & Quick Actions */}
-      <div className="grid gap-6 lg:grid-cols-12">
-        {/* My Tasks Card (7 Cols) */}
-        <div className="lg:col-span-7 rounded-2xl border border-[#1F2937] bg-[#121721] p-6 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#1F2937] pb-3 gap-3">
-            <div className="flex items-center gap-6">
-              <h2 className="text-base font-semibold text-white">
-                My Tasks
-              </h2>
-              <div className="flex gap-4 text-xs font-medium">
-                {["Upcoming", "Overdue", "Completed"].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTaskTab(tab)}
-                    className={`pb-3 border-b-2 transition ${
-                      activeTaskTab === tab
-                        ? "border-[#1D63ED] text-white"
-                        : "border-transparent text-[#6B7280] hover:text-[#9CA3AF]"
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <button className="text-xs font-semibold text-[#1D63ED] hover:underline self-end sm:self-auto">
-              View all
-            </button>
-          </div>
+      <CreateProjectModal
+        isOpen={modalType === "project"}
+        onClose={() => setModalType(null)}
+        onCreate={async (data) => {
+          await createProject(data);
+          setModalType(null);
+        }}
+        workspaceId={currentWorkspace?.id}
+      />
 
-          <div className="mt-4">
-            <div className="flex items-center justify-between rounded-xl border border-[#1F2937]/60 bg-[#0B0F17]/50 p-4 transition hover:border-[#374151]">
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-[#374151] bg-[#121721] text-[#1D63ED] focus:ring-0"
-                />
-                <div>
-                  <h3 className="text-sm font-semibold text-white">
-                    Review workflow automation logic
-                  </h3>
-                  <div className="flex items-center gap-1.5 mt-0.5 text-xs text-[#6B7280]">
-                    <FolderKanban size={12} />
-                    <span>DevFlow Platform</span>
-                  </div>
-                </div>
-              </div>
+      <CreateTaskModal
+        isOpen={modalType === "task"}
+        onClose={() => setModalType(null)}
+        projectId={defaultProjectId}
+        onCreate={async (data) => {
+          if (!defaultProjectId) {
+            throw new Error("No project available. Create a project first.");
+          }
+          await createTask(defaultProjectId, data);
+          setModalType(null);
+        }}
+      />
 
-              <div className="flex items-center gap-4">
-                <span className="rounded-lg bg-[#2D164B] border border-[#A855F7]/30 px-2.5 py-1 text-[11px] font-semibold text-[#C084FC]">
-                  High
-                </span>
+      <CreateWorkflowModal
+        isOpen={modalType === "workflow"}
+        onClose={() => setModalType(null)}
+        projectId={defaultProjectId}
+        onCreate={async (data) => {
+          if (!defaultProjectId) {
+            throw new Error("No project available. Create a project first.");
+          }
+          await createWorkflow(defaultProjectId, data);
+          setModalType(null);
+        }}
+      />
 
-                <div className="flex items-center gap-1 text-xs text-[#9CA3AF]">
-                  <Calendar size={13} />
-                  <span>May 24</span>
-                </div>
-
-                <div className="flex -space-x-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1D63ED] text-[10px] font-bold text-white ring-2 ring-[#121721]">
-                    AR
-                  </div>
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#10B981] text-[10px] font-bold text-white ring-2 ring-[#121721]">
-                    FN
-                  </div>
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1F2937] text-[10px] font-medium text-[#9CA3AF] ring-2 ring-[#121721]">
-                    +2
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions Card (5 Cols) */}
-        <div className="lg:col-span-5 rounded-2xl border border-[#1F2937] bg-[#121721] p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-white mb-4">
-            Quick Actions
-          </h2>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button className="flex flex-col items-center justify-center rounded-xl border border-[#1F2937] bg-[#0B0F17]/60 p-4 transition hover:border-[#374151] hover:bg-[#161B22]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0C2448] text-[#38BDF8] mb-2">
-                <FolderKanban size={20} />
-              </div>
-              <span className="text-xs font-medium text-white">
-                New Project
-              </span>
-            </button>
-
-            <button className="flex flex-col items-center justify-center rounded-xl border border-[#1F2937] bg-[#0B0F17]/60 p-4 transition hover:border-[#374151] hover:bg-[#161B22]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0B3B26] text-[#34D399] mb-2">
-                <CheckSquare size={20} />
-              </div>
-              <span className="text-xs font-medium text-white">
-                New Task
-              </span>
-            </button>
-
-            <button className="flex flex-col items-center justify-center rounded-xl border border-[#1F2937] bg-[#0B0F17]/60 p-4 transition hover:border-[#374151] hover:bg-[#161B22]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2D164B] text-[#C084FC] mb-2">
-                <Workflow size={20} />
-              </div>
-              <span className="text-xs font-medium text-white">
-                New Workflow
-              </span>
-            </button>
-
-            <button className="flex flex-col items-center justify-center rounded-xl border border-[#1F2937] bg-[#0B0F17]/60 p-4 transition hover:border-[#374151] hover:bg-[#161B22]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#3D2109] text-[#FBBF24] mb-2">
-                <UserPlus size={20} />
-              </div>
-              <span className="text-xs font-medium text-white">
-                Invite Member
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
+      <AddWorkspaceMemberModal
+        isOpen={modalType === "member"}
+        onClose={() => setModalType(null)}
+        onAddMember={async (data) => {
+          if (!currentWorkspace?.id) {
+            throw new Error("No workspace selected. Please select a workspace first.");
+          }
+          await addWorkspaceMember(currentWorkspace.id, data);
+          setModalType(null);
+        }}
+      />
     </div>
   );
 }
 
-export default Dashboard;
+export default Dashboard;

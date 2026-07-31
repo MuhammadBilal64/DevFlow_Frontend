@@ -1,4 +1,5 @@
-import { NavLink } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   FolderKanban,
@@ -8,63 +9,69 @@ import {
   Settings,
   ChevronDown,
   MoreVertical,
+  LogOut,
+  Building2,
+  Plus,
+  Check,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useWorkspace } from "../../context/WorkspaceContext";
+import DevFlowLogo from "../common/DevFlowLogo";
 
 const menuItems = [
-  {
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    path: "/dashboard",
-  },
-  {
-    title: "Projects",
-    icon: FolderKanban,
-    path: "/projects",
-  },
-  {
-    title: "Tasks",
-    icon: CheckSquare,
-    path: "/tasks",
-  },
-  {
-    title: "Workflows",
-    icon: Workflow,
-    path: "/workflows",
-  },
-  {
-    title: "Notifications",
-    icon: Bell,
-    path: "/notifications",
-  },
-  {
-    title: "Settings",
-    icon: Settings,
-    path: "/settings",
-  },
+  { title: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+  { title: "Projects", icon: FolderKanban, path: "/projects" },
+  { title: "Tasks", icon: CheckSquare, path: "/tasks" },
+  { title: "Workflows", icon: Workflow, path: "/workflows" },
+  { title: "Notifications", icon: Bell, path: "/notifications" },
+  { title: "Settings", icon: Settings, path: "/settings" },
 ];
 
 function Sidebar() {
-  const { user } = useAuth();
-  const { currentWorkspace } = useWorkspace();
+  const { user, logout } = useAuth();
+  const { workspaces, currentWorkspace, selectWorkspace } = useWorkspace();
+  const navigate = useNavigate();
 
-  const userName = user?.email
-    ? user.email.split("@")[0]
-    : "Muhammad Bilal";
-  const formattedName =
-    userName.charAt(0).toUpperCase() + userName.slice(1);
-  const userEmail = user?.email || "bilal@example.com";
-  const workspaceName = currentWorkspace?.name || "Acme Corporation";
+  const [isWorkspaceMenuOpen, setIsWorkspaceMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+
+  const wsMenuRef = useRef(null);
+  const profileMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (wsMenuRef.current && !wsMenuRef.current.contains(event.target)) {
+        setIsWorkspaceMenuOpen(false);
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const userName = user?.email ? user.email.split("@")[0] : "User";
+  const formattedName = userName.charAt(0).toUpperCase() + userName.slice(1);
+  const userEmail = user?.email || "user@example.com";
+  const workspaceName = currentWorkspace?.name || "DevFlow Workspace";
+
+  const handleLogout = async () => {
+    setIsProfileMenuOpen(false);
+    try {
+      await logout();
+      navigate("/auth/login");
+    } catch (err) {
+      console.warn("Logout error:", err);
+      navigate("/auth/login");
+    }
+  };
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r border-[#1F2937] bg-[#0B0F17] text-[#9CA3AF]">
+    <aside className="relative flex h-screen w-64 flex-col border-r border-[#30363D] bg-[#0D1117] text-slate-400 select-none">
       {/* Brand Header */}
-      <div className="flex flex-col px-6 py-5">
-        <h1 className="text-xl font-bold tracking-tight text-white">
-          DevFlow
-        </h1>
-        <p className="text-xs text-[#6B7280]">Workflow Automation</p>
+      <div className="flex items-center px-6 py-5 border-b border-[#30363D]/60">
+        <DevFlowLogo size="md" />
       </div>
 
       {/* Navigation Links */}
@@ -76,14 +83,14 @@ function Sidebar() {
               key={item.title}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition-all ${
+                `flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-xs font-medium transition-all ${
                   isActive
-                    ? "bg-[#1D63ED] text-white shadow-sm"
-                    : "text-[#9CA3AF] hover:bg-[#161B22] hover:text-white"
+                    ? "bg-[#161B22] text-white border border-[#30363D] font-semibold"
+                    : "text-slate-400 hover:bg-[#161B22]/50 hover:text-white"
                 }`
               }
             >
-              <Icon size={18} />
+              <Icon size={16} className="shrink-0" />
               <span>{item.title}</span>
             </NavLink>
           );
@@ -91,40 +98,148 @@ function Sidebar() {
       </nav>
 
       {/* Workspace Selector Card */}
-      <div className="px-3 py-2">
-        <button className="flex w-full items-center justify-between rounded-xl border border-[#1F2937] bg-[#121721] p-3 text-left transition hover:border-[#374151]">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1D63ED] text-xs font-bold text-white">
+      <div className="relative px-3 py-2" ref={wsMenuRef}>
+        {isWorkspaceMenuOpen && (
+          <div className="absolute bottom-full left-3 right-3 mb-2 rounded-xl border border-[#30363D] bg-[#161B22] p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2">
+            <div className="px-3 py-1.5 text-[10px] font-mono text-slate-500 uppercase tracking-wider border-b border-[#30363D] mb-1">
+              Switch Workspace
+            </div>
+            <div className="py-1 max-h-48 overflow-y-auto space-y-1">
+              {workspaces.map((ws) => {
+                const isSelected = currentWorkspace?.id === ws.id;
+                return (
+                  <button
+                    key={ws.id}
+                    onClick={() => {
+                      selectWorkspace(ws);
+                      setIsWorkspaceMenuOpen(false);
+                    }}
+                    className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs transition cursor-pointer ${
+                      isSelected
+                        ? "bg-sky-500/10 text-sky-400 font-semibold border border-sky-500/20"
+                        : "text-slate-300 hover:bg-[#0D1117] hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 truncate">
+                      <Building2 size={14} />
+                      <span className="truncate">{ws.name}</span>
+                    </div>
+                    {isSelected && <Check size={14} className="text-sky-400 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="border-t border-[#30363D] pt-1 mt-1">
+              <button
+                onClick={() => {
+                  setIsWorkspaceMenuOpen(false);
+                  navigate("/workspaces");
+                }}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-sky-400 hover:bg-[#0D1117] transition font-medium cursor-pointer"
+              >
+                <Plus size={14} />
+                <span>Manage Workspaces</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={() => {
+            setIsWorkspaceMenuOpen((prev) => !prev);
+            setIsProfileMenuOpen(false);
+          }}
+          className={`flex w-full items-center justify-between rounded-lg border p-2.5 text-left transition cursor-pointer ${
+            isWorkspaceMenuOpen
+              ? "border-sky-500/40 bg-sky-500/10"
+              : "border-[#30363D] bg-[#161B22] hover:border-slate-500"
+          }`}
+        >
+          <div className="flex items-center gap-2.5 truncate">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-[#30363D] text-[11px] font-bold text-white">
               {workspaceName.substring(0, 2).toUpperCase()}
             </div>
             <div className="truncate">
               <p className="truncate text-xs font-semibold text-white">
                 {workspaceName}
               </p>
-              <p className="text-[11px] text-[#6B7280]">Workspace</p>
+              <p className="text-[10px] text-slate-500">Workspace</p>
             </div>
           </div>
-          <ChevronDown size={16} className="text-[#6B7280]" />
+          <ChevronDown
+            size={14}
+            className={`text-slate-400 transition-transform duration-200 ${
+              isWorkspaceMenuOpen ? "rotate-180 text-sky-400" : ""
+            }`}
+          />
         </button>
       </div>
 
       {/* User Profile Footer */}
-      <div className="border-t border-[#1F2937] p-3">
-        <div className="flex items-center justify-between rounded-xl p-2 transition hover:bg-[#161B22]">
-          <div className="flex items-center gap-3 truncate">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1F2937] text-xs font-bold text-white ring-2 ring-[#374151]">
+      <div className="relative border-t border-[#30363D] p-3" ref={profileMenuRef}>
+        {isProfileMenuOpen && (
+          <div className="absolute bottom-full left-3 right-3 mb-2 rounded-xl border border-[#30363D] bg-[#161B22] p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2">
+            <div className="px-3 py-2 border-b border-[#30363D]">
+              <p className="text-xs font-semibold text-white truncate">{formattedName}</p>
+              <p className="text-[11px] text-slate-400 truncate">{userEmail}</p>
+            </div>
+
+            <div className="py-1 space-y-1">
+              <button
+                onClick={() => {
+                  setIsProfileMenuOpen(false);
+                  navigate("/settings");
+                }}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-slate-300 hover:bg-[#0D1117] hover:text-white transition cursor-pointer"
+              >
+                <Settings size={14} />
+                <span>Account Settings</span>
+              </button>
+            </div>
+
+            <div className="border-t border-[#30363D] pt-1 mt-1">
+              <button
+                onClick={handleLogout}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-rose-400 hover:bg-rose-500/10 transition font-medium cursor-pointer"
+              >
+                <LogOut size={14} />
+                <span>Log Out</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div
+          onClick={() => {
+            setIsProfileMenuOpen((prev) => !prev);
+            setIsWorkspaceMenuOpen(false);
+          }}
+          className={`flex items-center justify-between rounded-lg p-2 transition cursor-pointer ${
+            isProfileMenuOpen ? "bg-[#161B22] border border-[#30363D]" : "hover:bg-[#161B22]"
+          }`}
+        >
+          <div className="flex items-center gap-2.5 truncate">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#30363D] text-xs font-bold text-white">
               {formattedName.substring(0, 2).toUpperCase()}
             </div>
             <div className="truncate">
               <p className="truncate text-xs font-semibold text-white">
                 {formattedName}
               </p>
-              <p className="truncate text-[11px] text-[#6B7280]">
+              <p className="truncate text-[11px] text-slate-500">
                 {userEmail}
               </p>
             </div>
           </div>
-          <button className="text-[#6B7280] hover:text-white">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsProfileMenuOpen((prev) => !prev);
+              setIsWorkspaceMenuOpen(false);
+            }}
+            className="p-1 text-slate-400 hover:text-white transition rounded cursor-pointer"
+          >
             <MoreVertical size={16} />
           </button>
         </div>
@@ -133,4 +248,4 @@ function Sidebar() {
   );
 }
 
-export default Sidebar;
+export default Sidebar;

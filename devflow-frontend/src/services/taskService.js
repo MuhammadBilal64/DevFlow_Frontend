@@ -6,36 +6,30 @@ import api from "./api";
  */
 
 export const getTasksByProject = async (projectId, params = {}) => {
-  const response = await api.get(`/projects/${projectId}/tasks`, { params });
-  return response.data;
+  return await api.get(`/projects/${projectId}/tasks`, { params });
 };
 
 export const getTaskById = async (projectId, taskId) => {
-  const response = await api.get(`/projects/${projectId}/tasks/${taskId}`);
-  return response.data;
+  return await api.get(`/projects/${projectId}/tasks/${taskId}`);
 };
 
 export const createTask = async (projectId, data) => {
-  const response = await api.post(`/projects/${projectId}/tasks`, data);
-  return response.data;
+  return await api.post(`/projects/${projectId}/tasks`, data);
 };
 
 export const updateTask = async (projectId, taskId, data) => {
-  const response = await api.put(`/projects/${projectId}/tasks/${taskId}`, data);
-  return response.data;
+  return await api.put(`/projects/${projectId}/tasks/${taskId}`, data);
 };
 
 export const updateTaskStatus = async (projectId, taskId, status) => {
-  const response = await api.patch(`/projects/${projectId}/tasks/${taskId}/status`, { status });
-  return response.data;
+  return await api.patch(`/projects/${projectId}/tasks/${taskId}/status`, { status });
 };
 
 export const updateTaskAssignee = async (projectId, taskId, assignedToUserId) => {
-  const response = await api.patch(`/projects/${projectId}/tasks/${taskId}/assignee`, { assignedToUserId });
-  return response.data;
+  return await api.patch(`/projects/${projectId}/tasks/${taskId}/assignee`, { assignedToUserId });
 };
 
 export const deleteTask = async (projectId, taskId) => {
-  const response = await api.delete(`/projects/${projectId}/tasks/${taskId}`);
-  return response.data;
+  return await api.delete(`/projects/${projectId}/tasks/${taskId}`);
 };
+

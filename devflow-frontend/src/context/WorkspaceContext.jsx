@@ -3,12 +3,13 @@ import {
   useContext,
   useEffect,
   useState,
+  useCallback,
 } from "react";
-
 import {
   getMyWorkspaces,
   createWorkspace as createWorkspaceService,
 } from "../services/workspaceService";
+import { useAuth } from "./AuthContext";
 
 const WorkspaceContext = createContext(null);
 
@@ -16,44 +17,53 @@ export function WorkspaceProvider({ children }) {
   const [workspaces, setWorkspaces] = useState([]);
   const [currentWorkspace, setCurrentWorkspace] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
 
-  const loadWorkspaces = async () => {
-  setIsLoading(true);
+  const loadWorkspaces = useCallback(async () => {
+    if (!user) return;
+    setIsLoading(true);
 
-  try {
-    const response = await getMyWorkspaces();
+    try {
+      const response = await getMyWorkspaces();
 
-    console.log(response);
+      const rawData = response?.data || response;
+      const items = Array.isArray(rawData)
+        ? rawData
+        : Array.isArray(rawData?.items)
+        ? rawData.items
+        : Array.isArray(response?.items)
+        ? response.items
+        : [];
 
-    const items = response.data?.items ?? [];
-
-    setWorkspaces(items);
-
-    if (items.length > 0) {
-      setCurrentWorkspace((previous) => {
-        if (!previous) return items[0];
-
-        const existing = items.find(
-          (workspace) => workspace.id === previous.id
-        );
-
-        return existing ?? items[0];
+      setWorkspaces(items);
+      setCurrentWorkspace((prev) => {
+        if (items.length === 0) return null;
+        if (!prev) return items[0];
+        const found = items.find((w) => w.id === prev.id);
+        return found || items[0];
       });
-    } else {
+    } catch (error) {
+      console.warn("Could not fetch workspaces from API:", error?.message || error);
+      setWorkspaces([]);
       setCurrentWorkspace(null);
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.error(error);
-  } finally {
-    setIsLoading(false);
-  }
-};
-  const createWorkspace = async (workspace) => {
-    const response = await createWorkspaceService(workspace);
+  }, [user]);
 
-    await loadWorkspaces();
-
-    return response.data;
+  const createWorkspace = async (workspaceData) => {
+    try {
+      const response = await createWorkspaceService(workspaceData);
+      const newWs = response?.data || response;
+      await loadWorkspaces();
+      if (newWs?.id) {
+        setCurrentWorkspace(newWs);
+      }
+      return response;
+    } catch (error) {
+      console.error("Create workspace failed:", error);
+      throw error;
+    }
   };
 
   const selectWorkspace = (workspace) => {
@@ -61,8 +71,13 @@ export function WorkspaceProvider({ children }) {
   };
 
   useEffect(() => {
-    loadWorkspaces();
-  }, []);
+    if (user) {
+      loadWorkspaces();
+    } else {
+      setWorkspaces([]);
+      setCurrentWorkspace(null);
+    }
+  }, [user, loadWorkspaces]);
 
   return (
     <WorkspaceContext.Provider
@@ -82,12 +97,8 @@ export function WorkspaceProvider({ children }) {
 
 export function useWorkspace() {
   const context = useContext(WorkspaceContext);
-
   if (!context) {
-    throw new Error(
-      "useWorkspace must be used within WorkspaceProvider."
-    );
+    throw new Error("useWorkspace must be used within WorkspaceProvider.");
   }
-
   return context;
 }

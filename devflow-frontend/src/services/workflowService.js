@@ -6,31 +6,26 @@ import api from "./api";
  */
 
 export const getWorkflowsByProject = async (projectId, params = {}) => {
-  const response = await api.get(`/projects/${projectId}/workflows`, { params });
-  return response.data;
+  return await api.get(`/projects/${projectId}/workflows`, { params });
 };
 
 export const getWorkflowById = async (projectId, workflowId) => {
-  const response = await api.get(`/projects/${projectId}/workflows/${workflowId}`);
-  return response.data;
+  return await api.get(`/projects/${projectId}/workflows/${workflowId}`);
 };
 
 export const createWorkflow = async (projectId, data) => {
-  const response = await api.post(`/projects/${projectId}/workflows`, data);
-  return response.data;
+  return await api.post(`/projects/${projectId}/workflows`, data);
 };
 
 export const updateWorkflow = async (projectId, workflowId, data) => {
-  const response = await api.put(`/projects/${projectId}/workflows/${workflowId}`, data);
-  return response.data;
+  return await api.put(`/projects/${projectId}/workflows/${workflowId}`, data);
 };
 
 export const enableWorkflow = async (projectId, workflowId) => {
-  const response = await api.patch(`/projects/${projectId}/workflows/${workflowId}/enable`);
-  return response.data;
+  return await api.patch(`/projects/${projectId}/workflows/${workflowId}/enable`);
 };
 
 export const disableWorkflow = async (projectId, workflowId) => {
-  const response = await api.patch(`/projects/${projectId}/workflows/${workflowId}/disable`);
-  return response.data;
+  return await api.patch(`/projects/${projectId}/workflows/${workflowId}/disable`);
 };
+

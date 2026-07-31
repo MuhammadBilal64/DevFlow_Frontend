@@ -4,14 +4,14 @@ import Topbar from "../components/dashboard/Topbar";
 
 function DashboardLayout() {
   return (
-    <div className="min-h-screen bg-[#0B0F17] text-white antialiased font-sans">
+    <div className="min-h-screen bg-[#0D1117] text-[#F0F6FC] antialiased font-sans">
       <div className="flex h-screen overflow-hidden">
         <Sidebar />
 
         <div className="flex flex-1 flex-col overflow-hidden">
           <Topbar />
 
-          <main className="flex-1 overflow-y-auto p-8 bg-[#0B0F17]">
+          <main className="flex-1 overflow-y-auto p-6 lg:p-8 bg-[#0D1117]">
             <Outlet />
           </main>
         </div>
@@ -20,4 +20,4 @@ function DashboardLayout() {
   );
 }
 
-export default DashboardLayout;
+export default DashboardLayout;

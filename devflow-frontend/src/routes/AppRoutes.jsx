@@ -5,6 +5,7 @@ import ProtectedRoute from "./ProtectedRoute";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 
+import LandingPage from "../pages/public/LandingPage";
 import Dashboard from "../pages/dashboard/Dashboard";
 import Projects from "../pages/projects/Projects";
 import Tasks from "../pages/tasks/Tasks";
@@ -16,8 +17,15 @@ import Workspaces from "../pages/workspaces/Workspaces";
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/auth/*" element={<AuthRoutes />} />
+      {/* Public Landing Page */}
+      <Route path="/" element={<LandingPage />} />
 
+      {/* Public Auth Routes */}
+      <Route path="/auth/*" element={<AuthRoutes />} />
+      <Route path="/login" element={<Navigate to="/auth/login" replace />} />
+      <Route path="/register" element={<Navigate to="/auth/register" replace />} />
+
+      {/* Protected Dashboard Application Routes */}
       <Route
         element={
           <ProtectedRoute>
@@ -34,9 +42,11 @@ function AppRoutes() {
         <Route path="/workspaces" element={<Workspaces />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      {/* Fallback to Landing Page */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
 
-export default AppRoutes;
+export default AppRoutes;
+
