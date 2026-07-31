@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 export function DevFlowIcon({ className = "w-7 h-7" }) {
   return (
@@ -8,7 +9,7 @@ export function DevFlowIcon({ className = "w-7 h-7" }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Outer Sharp Hexagon Outline */}
+      {/* Outer Hexagon Outline */}
       <path
         d="M16 3L28 9.9282V23.7846L16 30.7128L4 23.7846V9.9282L16 3Z"
         stroke="#30363D"
@@ -24,13 +25,13 @@ export function DevFlowIcon({ className = "w-7 h-7" }) {
         fill="#0D1117"
       />
 
-      {/* Connection Node Point */}
+      {/* Connection Point */}
       <circle cx="16" cy="16" r="2.5" fill="#38BDF8" />
     </svg>
   );
 }
 
-export default function DevFlowLogo({ size = "md", className = "" }) {
+export default function DevFlowLogo({ size = "md", linkToHome = true, className = "" }) {
   const sizeMap = {
     sm: { icon: "w-6 h-6", text: "text-lg" },
     md: { icon: "w-7 h-7", text: "text-xl" },
@@ -39,7 +40,7 @@ export default function DevFlowLogo({ size = "md", className = "" }) {
 
   const { icon, text } = sizeMap[size] || sizeMap.md;
 
-  return (
+  const content = (
     <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
       <DevFlowIcon className={icon} />
       <span className={`font-bold tracking-tight text-white ${text}`}>
@@ -47,4 +48,10 @@ export default function DevFlowLogo({ size = "md", className = "" }) {
       </span>
     </div>
   );
+
+  if (linkToHome) {
+    return <Link to="/">{content}</Link>;
+  }
+
+  return content;
 }

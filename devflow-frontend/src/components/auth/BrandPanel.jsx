@@ -4,7 +4,7 @@ import DevFlowLogo from "../common/DevFlowLogo";
 function BrandPanel() {
   return (
     <section className="relative hidden lg:flex flex-col justify-between bg-[#0D1117] border-r border-[#30363D] p-8 xl:p-12">
-      {/* Top */}
+      {/* Top Logo */}
       <div className="relative z-10">
         <DevFlowLogo size="md" />
       </div>
@@ -19,8 +19,7 @@ function BrandPanel() {
           </h2>
 
           <p className="mt-4 text-sm xl:text-base text-slate-400 leading-relaxed max-w-md">
-            DevFlow brings projects, workflows, and automation into one
-            collaborative workspace—built for modern engineering teams.
+            DevFlow brings projects, workflows, and automation into one collaborative workspace—built for modern engineering teams.
           </p>
         </div>
 
@@ -31,7 +30,7 @@ function BrandPanel() {
       {/* Footer */}
       <div className="relative z-10 flex items-center justify-between border-t border-[#30363D] pt-4 text-xs font-mono text-slate-500">
         <span>© 2026 DevFlow</span>
-        <span>v1.0.0</span>
+        <span>v2.0.0</span>
       </div>
     </section>
   );
