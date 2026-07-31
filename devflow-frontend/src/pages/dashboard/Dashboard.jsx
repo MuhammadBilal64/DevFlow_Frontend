@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FolderKanban,
   CheckSquare,
@@ -9,10 +10,20 @@ import {
   Workflow,
   FileText,
   Calendar,
-  Plus,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useWorkspace } from "../../context/WorkspaceContext";
 import StatCard from "../../components/dashboard/StatCard";
+import CreateProjectModal from "../../components/projects/CreateProjectModal";
+import CreateTaskModal from "../../components/tasks/CreateTaskModal";
+import CreateWorkflowModal from "../../components/workflows/CreateWorkflowModal";
+import AddWorkspaceMemberModal from "../../components/workspaces/AddWorkspaceMemberModal";
+import { createProject, getProjectsByWorkspace } from "../../services/projectService";
+import { createTask } from "../../services/taskService";
+import { createWorkflow } from "../../services/workflowService";
+import { addWorkspaceMember, getWorkspaceMembers } from "../../services/workspaceService";
+import { getUnreadNotificationCount } from "../../services/notificationService";
+
 
 const recentProjects = [
   {
@@ -115,13 +126,44 @@ const activityFeed = [
 
 function Dashboard() {
   const { user } = useAuth();
-  const [activeTaskTab, setActiveTaskTab] = useState("Upcoming");
+  const { currentWorkspace } = useWorkspace();
+  const navigate = useNavigate();
 
-  const userName = user?.email
-    ? user.email.split("@")[0]
-    : "Bilal";
-  const formattedName =
-    userName.charAt(0).toUpperCase() + userName.slice(1);
+  const [activeTaskTab, setActiveTaskTab] = useState("Upcoming");
+  const [modalType, setModalType] = useState(null); // 'project', 'task', 'workflow', 'member'
+
+  const [stats, setStats] = useState({
+    projectsCount: 0,
+    membersCount: 0,
+    notificationsCount: 0,
+  });
+
+  useEffect(() => {
+    if (!currentWorkspace?.id) return;
+
+    Promise.all([
+      getProjectsByWorkspace(currentWorkspace.id).catch(() => ({ data: [] })),
+      getWorkspaceMembers(currentWorkspace.id).catch(() => ({ data: [] })),
+      getUnreadNotificationCount().catch(() => ({ data: 0 })),
+    ]).then(([projRes, memberRes, notifRes]) => {
+      const projs = projRes?.data || projRes;
+      const members = memberRes?.data || memberRes;
+      const notifs = notifRes?.data ?? notifRes ?? 0;
+
+      const pCount = Array.isArray(projs) ? projs.length : projs?.items?.length ?? 0;
+      const mCount = Array.isArray(members) ? members.length : members?.items?.length ?? 0;
+      const nCount = typeof notifs === "number" ? notifs : 0;
+
+      setStats({
+        projectsCount: pCount,
+        membersCount: mCount,
+        notificationsCount: nCount,
+      });
+    });
+  }, [currentWorkspace?.id]);
+
+  const userName = user?.name || (user?.email ? user.email.split("@")[0] : "User");
+  const formattedName = userName.charAt(0).toUpperCase() + userName.slice(1);
 
   return (
     <div className="space-y-8 pb-10">
@@ -131,7 +173,8 @@ function Dashboard() {
           Good evening, {formattedName} 👋
         </h1>
         <p className="mt-1 text-sm text-[#9CA3AF]">
-          Here's what's happening in your workspace today.
+          Here's what's happening in workspace{" "}
+          <span className="font-semibold text-white">{currentWorkspace?.name || "Active Workspace"}</span> today.
         </p>
       </div>
 
@@ -139,41 +182,42 @@ function Dashboard() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Projects"
-          value="12"
+          value={String(stats.projectsCount)}
           icon={FolderKanban}
-          trend="↑ 2 this week"
+          trend="Workspace active"
           trendType="up"
           iconBg="bg-[#0C2448]"
           iconColor="text-[#38BDF8]"
         />
         <StatCard
           title="Tasks"
-          value="32"
+          value="--"
           icon={CheckSquare}
-          trend="↑ 6 this week"
+          trend="Sprint active"
           trendType="up"
           iconBg="bg-[#0B3B26]"
           iconColor="text-[#34D399]"
         />
         <StatCard
           title="Members"
-          value="8"
+          value={String(stats.membersCount)}
           icon={Users}
-          trend="— No change"
+          trend="Team roster"
           trendType="neutral"
           iconBg="bg-[#2D164B]"
           iconColor="text-[#C084FC]"
         />
         <StatCard
           title="Notifications"
-          value="7"
+          value={String(stats.notificationsCount)}
           icon={Bell}
-          trend="↓ 2 this week"
+          trend="Unread alerts"
           trendType="down"
           iconBg="bg-[#3D2109]"
           iconColor="text-[#FBBF24]"
         />
       </div>
+
 
       {/* Middle Section: Recent Projects & Activity Feed */}
       <div className="grid gap-6 lg:grid-cols-12">
@@ -183,7 +227,10 @@ function Dashboard() {
             <h2 className="text-base font-semibold text-white">
               Recent Projects
             </h2>
-            <button className="text-xs font-semibold text-[#1D63ED] hover:underline">
+            <button
+              onClick={() => navigate("/projects")}
+              className="text-xs font-semibold text-[#1D63ED] hover:underline"
+            >
               View all
             </button>
           </div>
@@ -192,7 +239,8 @@ function Dashboard() {
             {recentProjects.map((project) => (
               <div
                 key={project.id}
-                className="flex items-center justify-between rounded-xl border border-[#1F2937]/60 bg-[#0B0F17]/50 p-3.5 transition hover:border-[#374151]"
+                onClick={() => navigate("/projects")}
+                className="flex items-center justify-between rounded-xl border border-[#1F2937]/60 bg-[#0B0F17]/50 p-3.5 transition hover:border-[#374151] cursor-pointer"
               >
                 <div className="flex items-center gap-3.5">
                   <div
@@ -244,7 +292,10 @@ function Dashboard() {
             <h2 className="text-base font-semibold text-white">
               Activity Feed
             </h2>
-            <button className="text-xs font-semibold text-[#1D63ED] hover:underline">
+            <button
+              onClick={() => navigate("/notifications")}
+              className="text-xs font-semibold text-[#1D63ED] hover:underline"
+            >
               View all
             </button>
           </div>
@@ -308,13 +359,19 @@ function Dashboard() {
                 ))}
               </div>
             </div>
-            <button className="text-xs font-semibold text-[#1D63ED] hover:underline self-end sm:self-auto">
+            <button
+              onClick={() => navigate("/tasks")}
+              className="text-xs font-semibold text-[#1D63ED] hover:underline self-end sm:self-auto"
+            >
               View all
             </button>
           </div>
 
           <div className="mt-4">
-            <div className="flex items-center justify-between rounded-xl border border-[#1F2937]/60 bg-[#0B0F17]/50 p-4 transition hover:border-[#374151]">
+            <div
+              onClick={() => navigate("/tasks")}
+              className="flex items-center justify-between rounded-xl border border-[#1F2937]/60 bg-[#0B0F17]/50 p-4 transition hover:border-[#374151] cursor-pointer"
+            >
               <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
@@ -364,7 +421,10 @@ function Dashboard() {
           </h2>
 
           <div className="grid grid-cols-2 gap-3">
-            <button className="flex flex-col items-center justify-center rounded-xl border border-[#1F2937] bg-[#0B0F17]/60 p-4 transition hover:border-[#374151] hover:bg-[#161B22]">
+            <button
+              onClick={() => setModalType("project")}
+              className="flex flex-col items-center justify-center rounded-xl border border-[#1F2937] bg-[#0B0F17]/60 p-4 transition hover:border-[#374151] hover:bg-[#161B22] active:scale-95"
+            >
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0C2448] text-[#38BDF8] mb-2">
                 <FolderKanban size={20} />
               </div>
@@ -373,7 +433,10 @@ function Dashboard() {
               </span>
             </button>
 
-            <button className="flex flex-col items-center justify-center rounded-xl border border-[#1F2937] bg-[#0B0F17]/60 p-4 transition hover:border-[#374151] hover:bg-[#161B22]">
+            <button
+              onClick={() => setModalType("task")}
+              className="flex flex-col items-center justify-center rounded-xl border border-[#1F2937] bg-[#0B0F17]/60 p-4 transition hover:border-[#374151] hover:bg-[#161B22] active:scale-95"
+            >
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0B3B26] text-[#34D399] mb-2">
                 <CheckSquare size={20} />
               </div>
@@ -382,7 +445,10 @@ function Dashboard() {
               </span>
             </button>
 
-            <button className="flex flex-col items-center justify-center rounded-xl border border-[#1F2937] bg-[#0B0F17]/60 p-4 transition hover:border-[#374151] hover:bg-[#161B22]">
+            <button
+              onClick={() => setModalType("workflow")}
+              className="flex flex-col items-center justify-center rounded-xl border border-[#1F2937] bg-[#0B0F17]/60 p-4 transition hover:border-[#374151] hover:bg-[#161B22] active:scale-95"
+            >
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2D164B] text-[#C084FC] mb-2">
                 <Workflow size={20} />
               </div>
@@ -391,7 +457,10 @@ function Dashboard() {
               </span>
             </button>
 
-            <button className="flex flex-col items-center justify-center rounded-xl border border-[#1F2937] bg-[#0B0F17]/60 p-4 transition hover:border-[#374151] hover:bg-[#161B22]">
+            <button
+              onClick={() => setModalType("member")}
+              className="flex flex-col items-center justify-center rounded-xl border border-[#1F2937] bg-[#0B0F17]/60 p-4 transition hover:border-[#374151] hover:bg-[#161B22] active:scale-95"
+            >
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#3D2109] text-[#FBBF24] mb-2">
                 <UserPlus size={20} />
               </div>
@@ -402,8 +471,37 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Quick Action Modals */}
+      <CreateProjectModal
+        isOpen={modalType === "project"}
+        onClose={() => setModalType(null)}
+        onCreate={(data) => createProject(data).catch(() => {})}
+        workspaceId={currentWorkspace?.id}
+      />
+
+      <CreateTaskModal
+        isOpen={modalType === "task"}
+        onClose={() => setModalType(null)}
+        onCreate={(data) => createTask(1, data).catch(() => {})}
+        projectId={1}
+      />
+
+      <CreateWorkflowModal
+        isOpen={modalType === "workflow"}
+        onClose={() => setModalType(null)}
+        onCreate={(data) => createWorkflow(1, data).catch(() => {})}
+        projectId={1}
+      />
+
+      <AddWorkspaceMemberModal
+        isOpen={modalType === "member"}
+        onClose={() => setModalType(null)}
+        onAddMember={(data) => currentWorkspace?.id && addWorkspaceMember(currentWorkspace.id, data).catch(() => {})}
+      />
     </div>
   );
 }
 
-export default Dashboard;
+export default Dashboard;
+

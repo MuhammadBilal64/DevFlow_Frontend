@@ -9,10 +9,25 @@
   body {
     margin: 0;
     font-family: var(--font-sans);
-    background-color: #0B0E14;
+    background-color: #0B0F17;
     color: #E6EDF3;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* Industry-level cursor pointer rule for all interactive elements */
+  button,
+  a,
+  select,
+  summary,
+  [role="button"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"],
+  input[type="checkbox"],
+  input[type="radio"],
+  .cursor-pointer {
+    cursor: pointer !important;
   }
 
   code,
@@ -20,6 +35,25 @@
   .font-mono {
     font-family: var(--font-mono);
   }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0B0F17;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1F2937;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #374151;
 }
 
 /* Browser Autofill Override for Dark Mode */
@@ -33,39 +67,24 @@ input:-webkit-autofill:active {
   box-shadow: inset 0 0 0 1000px #0D1117 !important;
 }
 
-/* Linear / Vercel Inspired Dark Surface Tokens */
+/* Modern Dark Surface Tokens & Interactive Classes */
 .surface-panel {
-  background-color: #131720;
-  border: 1px solid #21262D;
+  background-color: #121721;
+  border: 1px solid #1F2937;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
 }
 
-.surface-input {
-  background-color: #0D1117 !important;
-  border: 1px solid #30363D;
-  color: #F0F6FC !important;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+.interactive-card {
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.surface-input:focus-within,
-.surface-input:focus {
-  border-color: #38BDF8 !important;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15) !important;
+.interactive-card:hover {
+  border-color: #1D63ED !important;
+  box-shadow: 0 10px 30px -10px rgba(29, 99, 237, 0.25);
+  transform: translateY(-1px);
 }
 
-.btn-primary {
-  background-color: #F0F6FC;
-  color: #0B0E14;
-  font-weight: 600;
-  transition: all 0.15s ease;
-}
-
-.btn-primary:hover {
-  background-color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.12);
-  transform: translateY(-0.5px);
-}
-
-.btn-primary:active {
+.interactive-card:active {
   transform: translateY(0);
 }
