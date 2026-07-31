@@ -1,16 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Calendar, FolderKanban, ArrowRight, ArrowLeft, CheckCircle2, RefreshCw, CheckSquare } from "lucide-react";
+import { Plus, Calendar, FolderKanban, ArrowRight, ArrowLeft, CheckCircle2, RefreshCw, CheckSquare, Eye } from "lucide-react";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { getTasksByProject, createTask, updateTaskStatus } from "../../services/taskService";
 import { getProjectsByWorkspace } from "../../services/projectService";
 import CreateTaskModal from "../../components/tasks/CreateTaskModal";
+import TaskDetailsModal from "../../components/tasks/TaskDetailsModal";
 import EmptyState from "../../components/common/EmptyState";
 import Skeleton from "../../components/common/Skeleton";
 
 const priorityBadges = {
-  0: { label: "Low", className: "bg-[#0B3B26] text-[#34D399] border-[#10B981]/30" },
-  1: { label: "Medium", className: "bg-[#3D2109] text-[#FBBF24] border-[#F59E0B]/30" },
-  2: { label: "High", className: "bg-[#2D164B] text-[#C084FC] border-[#A855F7]/30" },
+  0: { label: "Low", className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+  1: { label: "Medium", className: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
+  2: { label: "High", className: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
 };
 
 function Tasks() {
@@ -19,7 +20,8 @@ function Tasks() {
   const [projects, setProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
 
   // Fetch projects in workspace
   useEffect(() => {
@@ -78,8 +80,8 @@ function Tasks() {
   }, [selectedProjectId, fetchTasks]);
 
   // Status Change Handler (Kanban status transition)
-  const handleStatusChange = async (taskId, newStatus) => {
-    // Optimistic UI Update
+  const handleStatusChange = async (taskId, newStatus, e) => {
+    e.stopPropagation();
     setTasks((prev) =>
       prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
     );
@@ -109,24 +111,32 @@ function Tasks() {
     }
   };
 
+  const handleTaskUpdated = (updatedTask) => {
+    setTasks((prev) => prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
+  };
+
+  const handleTaskDeleted = (taskId) => {
+    setTasks((prev) => prev.filter((t) => t.id !== taskId));
+  };
+
   const columns = [
-    { title: "To Do", statusVal: 0, badgeBg: "bg-[#1F2937] text-[#9CA3AF]" },
-    { title: "In Progress", statusVal: 1, badgeBg: "bg-[#0C2448] text-[#38BDF8]" },
-    { title: "Completed", statusVal: 2, badgeBg: "bg-[#0B3B26] text-[#34D399]" },
+    { title: "To Do", statusVal: 0, badgeBg: "bg-[#0D1117] text-slate-400 border border-[#30363D]" },
+    { title: "In Progress", statusVal: 1, badgeBg: "bg-sky-500/10 text-sky-400 border border-sky-500/20" },
+    { title: "Completed", statusVal: 2, badgeBg: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
   ];
 
   const selectedProjectObj = projects.find((p) => p.id === selectedProjectId);
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="space-y-6 pb-10 select-none">
       {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h1 className="text-xl font-bold tracking-tight text-[#F0F6FC] flex items-center gap-2">
             <span>Tasks & Kanban</span>
-            {isLoading && <RefreshCw size={16} className="animate-spin text-[#1D63ED]" />}
+            {isLoading && <RefreshCw size={14} className="animate-spin text-sky-400" />}
           </h1>
-          <p className="mt-1 text-sm text-[#9CA3AF]">
+          <p className="mt-1 text-xs text-slate-400">
             Track issue status, sprint backlogs, and task assignments across workspace projects.
           </p>
         </div>
@@ -136,7 +146,7 @@ function Tasks() {
             <select
               value={selectedProjectId || ""}
               onChange={(e) => setSelectedProjectId(Number(e.target.value))}
-              className="rounded-xl border border-[#1F2937] bg-[#121721] px-3.5 py-2 text-xs text-white outline-none focus:border-[#1D63ED]"
+              className="rounded-lg border border-[#30363D] bg-[#161B22] px-3.5 py-2 text-xs text-[#F0F6FC] outline-none focus:border-sky-500 cursor-pointer"
             >
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -148,10 +158,10 @@ function Tasks() {
 
           {projects.length > 0 && (
             <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 rounded-xl bg-[#1D63ED] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#1551C9] active:scale-[0.98]"
+              onClick={() => setIsCreateModalOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg bg-[#F0F6FC] px-4 py-2 text-xs font-semibold text-[#0D1117] hover:bg-white transition cursor-pointer"
             >
-              <Plus size={16} />
+              <Plus size={14} />
               <span>New Task</span>
             </button>
           )}
@@ -177,7 +187,7 @@ function Tasks() {
           title={`No Tasks in Project "${selectedProjectObj?.name || "Selected Project"}"`}
           description="This project currently has no open or completed tasks. Create a task to start tracking work on the Kanban board."
           actionLabel="Create First Task"
-          onAction={() => setIsModalOpen(true)}
+          onAction={() => setIsCreateModalOpen(true)}
         />
       ) : (
         <div className="grid gap-6 md:grid-cols-3">
@@ -187,13 +197,13 @@ function Tasks() {
             return (
               <div
                 key={col.title}
-                className="rounded-2xl border border-[#1F2937] bg-[#121721] p-5 space-y-4 shadow-sm min-h-[450px]"
+                className="rounded-xl border border-[#30363D] bg-[#161B22] p-4 space-y-3 min-h-[450px]"
               >
-                <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
+                <div className="flex items-center justify-between border-b border-[#30363D] pb-3">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-white">{col.title}</h3>
+                    <h3 className="text-xs font-bold text-white">{col.title}</h3>
                     <span
-                      className={`flex h-5 px-2 items-center justify-center rounded-full text-[11px] font-bold ${col.badgeBg}`}
+                      className={`flex h-4 px-2 items-center justify-center rounded-full text-[10px] font-mono font-bold ${col.badgeBg}`}
                     >
                       {colTasks.length}
                     </span>
@@ -202,7 +212,7 @@ function Tasks() {
 
                 <div className="space-y-3">
                   {colTasks.length === 0 ? (
-                    <div className="py-12 text-center text-xs text-[#6B7280]">
+                    <div className="py-12 text-center text-xs text-slate-500 font-mono">
                       No tasks in {col.title}
                     </div>
                   ) : (
@@ -215,44 +225,45 @@ function Tasks() {
                       return (
                         <div
                           key={task.id}
-                          className="group relative rounded-xl border border-[#1F2937]/80 bg-[#0B0F17]/70 p-4 transition hover:border-[#374151]"
+                          onClick={() => setSelectedTask(task)}
+                          className="group relative rounded-lg border border-[#30363D] bg-[#0D1117] p-3.5 space-y-2 transition hover:border-sky-500 cursor-pointer"
                         >
                           <div className="flex items-center justify-between">
                             <span
-                              className={`rounded-lg border px-2 py-0.5 text-[10px] font-semibold ${priorityInfo.className}`}
+                              className={`rounded border px-1.5 py-0.5 text-[10px] font-mono font-semibold ${priorityInfo.className}`}
                             >
                               {priorityInfo.label}
                             </span>
-                            <span className="text-[10px] text-[#6B7280]">#{task.id}</span>
+                            <span className="text-[10px] font-mono text-slate-500">#{task.id}</span>
                           </div>
 
-                          <h4 className="mt-2 text-xs font-semibold text-white leading-snug">
+                          <h4 className="text-xs font-semibold text-white leading-snug group-hover:text-sky-400 transition">
                             {task.title}
                           </h4>
 
                           {task.description && (
-                            <p className="mt-1 text-[11px] text-[#9CA3AF] line-clamp-2">
+                            <p className="text-[11px] text-slate-400 line-clamp-2">
                               {task.description}
                             </p>
                           )}
 
-                          <div className="mt-3 flex items-center justify-between text-[11px] text-[#6B7280] pt-2 border-t border-[#1F2937]">
-                            <div className="flex items-center gap-1 text-[#9CA3AF]">
-                              <FolderKanban size={12} />
-                              <span className="max-w-[90px] truncate">{selectedProjectObj?.name || "Project"}</span>
+                          <div className="flex items-center justify-between text-[10px] text-slate-500 pt-2 border-t border-[#30363D]">
+                            <div className="flex items-center gap-1 text-slate-400">
+                              <FolderKanban size={11} />
+                              <span className="max-w-[80px] truncate">{selectedProjectObj?.name || "Project"}</span>
                             </div>
-                            <div className="flex items-center gap-1 text-[#9CA3AF]">
-                              <Calendar size={12} />
+                            <div className="flex items-center gap-1 text-slate-400">
+                              <Calendar size={11} />
                               <span>{formattedDate}</span>
                             </div>
                           </div>
 
                           {/* Interactive Status Transition Controls */}
-                          <div className="mt-3 flex items-center justify-between pt-2 border-t border-[#1F2937]/50">
+                          <div className="flex items-center justify-between pt-2 border-t border-[#30363D]/60 text-[10px]">
                             {col.statusVal > 0 ? (
                               <button
-                                onClick={() => handleStatusChange(task.id, col.statusVal - 1)}
-                                className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-white transition"
+                                onClick={(e) => handleStatusChange(task.id, col.statusVal - 1, e)}
+                                className="flex items-center gap-1 text-slate-400 hover:text-white transition cursor-pointer"
                                 title="Move left"
                               >
                                 <ArrowLeft size={12} />
@@ -264,15 +275,15 @@ function Tasks() {
 
                             {col.statusVal < 2 ? (
                               <button
-                                onClick={() => handleStatusChange(task.id, col.statusVal + 1)}
-                                className="flex items-center gap-1 text-[10px] text-[#1D63ED] hover:text-[#38BDF8] transition font-medium"
+                                onClick={(e) => handleStatusChange(task.id, col.statusVal + 1, e)}
+                                className="flex items-center gap-1 text-sky-400 hover:underline font-semibold cursor-pointer"
                                 title="Move right"
                               >
                                 <span>Next</span>
                                 <ArrowRight size={12} />
                               </button>
                             ) : (
-                              <div className="flex items-center gap-1 text-[10px] text-[#34D399]">
+                              <div className="flex items-center gap-1 text-emerald-400 font-medium">
                                 <CheckCircle2 size={12} />
                                 <span>Done</span>
                               </div>
@@ -291,15 +302,26 @@ function Tasks() {
 
       {/* Create Task Modal */}
       <CreateTaskModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
         onCreate={handleCreateTask}
         projectId={selectedProjectId}
+      />
+
+      {/* Task Details & Edit Modal */}
+      <TaskDetailsModal
+        isOpen={Boolean(selectedTask)}
+        onClose={() => setSelectedTask(null)}
+        task={selectedTask}
+        projectId={selectedProjectId}
+        onTaskUpdated={handleTaskUpdated}
+        onTaskDeleted={handleTaskDeleted}
       />
     </div>
   );
 }
 
 export default Tasks;
+
 
 

@@ -67,15 +67,15 @@ function Projects() {
   );
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="space-y-6 pb-10 select-none">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h1 className="text-xl font-bold tracking-tight text-[#F0F6FC] flex items-center gap-2">
             <span>Projects</span>
-            {isLoading && <RefreshCw size={16} className="animate-spin text-[#1D63ED]" />}
+            {isLoading && <RefreshCw size={14} className="animate-spin text-sky-400" />}
           </h1>
-          <p className="mt-1 text-sm text-[#9CA3AF]">
+          <p className="mt-1 text-xs text-slate-400">
             Manage, organize, and monitor progress for workspace:{" "}
             <span className="font-semibold text-white">{currentWorkspace?.name || "Active Workspace"}</span>
           </p>
@@ -83,31 +83,31 @@ function Projects() {
 
         <button
           onClick={() => setIsCreateOpen(true)}
-          className="flex items-center gap-2 rounded-xl bg-[#1D63ED] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#1551C9] active:scale-[0.98]"
+          className="flex items-center gap-1.5 rounded-lg bg-[#F0F6FC] px-4 py-2 text-xs font-semibold text-[#0D1117] hover:bg-white transition cursor-pointer"
         >
-          <Plus size={16} />
+          <Plus size={14} />
           <span>New Project</span>
         </button>
       </div>
 
       {/* Filter and Search Header */}
-      <div className="flex items-center justify-between rounded-xl border border-[#1F2937] bg-[#121721] p-4">
+      <div className="flex items-center justify-between rounded-xl border border-[#30363D] bg-[#161B22] p-4">
         <div className="relative flex items-center w-72">
-          <Search size={15} className="absolute left-3.5 text-[#6B7280]" />
+          <Search size={14} className="absolute left-3 text-slate-500" />
           <input
             type="text"
             placeholder="Search projects..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-9 w-full rounded-xl border border-[#1F2937] bg-[#0B0F17] pl-9 pr-3 text-xs text-white placeholder-[#6B7280] outline-none focus:border-[#1D63ED]"
+            className="h-8 w-full rounded-lg border border-[#30363D] bg-[#0D1117] pl-8 pr-3 text-xs text-[#F0F6FC] placeholder:text-slate-500 outline-none focus:border-sky-500"
           />
         </div>
 
         <button
           onClick={fetchProjects}
-          className="flex items-center gap-2 rounded-xl border border-[#1F2937] bg-[#0B0F17] px-3.5 py-2 text-xs font-medium text-[#9CA3AF] hover:text-white transition"
+          className="flex items-center gap-2 rounded-lg border border-[#30363D] bg-[#0D1117] px-3.5 py-1.5 text-xs font-medium text-slate-400 hover:text-white transition cursor-pointer"
         >
-          <Filter size={14} />
+          <Filter size={13} />
           <span>Refresh</span>
         </button>
       </div>
@@ -137,26 +137,26 @@ function Projects() {
             <div
               key={proj.id || proj.name}
               onClick={() => setSelectedProject(proj)}
-              className="group relative rounded-2xl border border-[#1F2937] bg-[#121721] p-5 shadow-sm transition hover:border-[#1D63ED] cursor-pointer"
+              className="group relative rounded-xl border border-[#30363D] bg-[#161B22] p-5 transition hover:border-sky-500 cursor-pointer"
             >
               <div className="flex items-center justify-between mb-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0C2448] text-[#38BDF8]">
-                  <FolderKanban size={20} />
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                  <FolderKanban size={18} />
                 </div>
-                <span className="rounded-lg bg-[#0C2448] border border-[#1D63ED]/30 px-2.5 py-1 text-[11px] font-semibold text-[#38BDF8]">
+                <span className="rounded font-mono text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 border border-emerald-500/20">
                   {proj.status || "In Progress"}
                 </span>
               </div>
-              <h3 className="text-sm font-semibold text-white group-hover:text-[#38BDF8] transition">
+              <h3 className="text-xs font-bold text-white group-hover:text-sky-400 transition">
                 {proj.name}
               </h3>
-              <p className="text-xs text-[#6B7280] mt-1 line-clamp-2">
+              <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">
                 {proj.description || "Active engineering project"}
               </p>
 
-              <div className="mt-4 pt-3 border-t border-[#1F2937] flex items-center justify-between text-xs text-[#9CA3AF]">
+              <div className="mt-4 pt-3 border-t border-[#30363D] flex items-center justify-between text-xs text-slate-500">
                 <span>View Details & Tasks</span>
-                <Eye size={14} className="text-[#1D63ED] opacity-0 group-hover:opacity-100 transition" />
+                <Eye size={14} className="text-sky-400 opacity-0 group-hover:opacity-100 transition" />
               </div>
             </div>
           ))}
@@ -181,5 +181,3 @@ function Projects() {
 }
 
 export default Projects;
-
-
