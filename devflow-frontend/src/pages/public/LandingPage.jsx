@@ -278,9 +278,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Benefits Section */}
+      {/* Benefits & Automation Section */}
       <section id="benefits" className="py-16 border-t border-[#30363D] px-6 lg:px-12 bg-[#0D1117]">
-        <div className="mx-auto max-w-5xl space-y-8">
+        <div id="automation" className="mx-auto max-w-5xl space-y-8 scroll-mt-24">
+
           <div className="grid gap-8 lg:grid-cols-2 items-center">
             <div className="space-y-4">
               <h2 className="text-xs font-mono uppercase tracking-wider text-sky-400">
