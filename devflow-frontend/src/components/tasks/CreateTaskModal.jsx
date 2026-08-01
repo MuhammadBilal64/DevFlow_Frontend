@@ -2,7 +2,7 @@ import { useState } from "react";
 import Modal from "../common/Modal";
 import { localDateStringToISO } from "../../utils/dateUtils";
 
-export default function CreateTaskModal({ isOpen, onClose, onCreate, projectId }) {
+export default function CreateTaskModal({ isOpen, onClose, onCreate }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState(1); // 0 = Low, 1 = Medium, 2 = High

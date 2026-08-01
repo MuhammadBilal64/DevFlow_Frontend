@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   User,
   Building2,
-  Shield,
   Bell,
   Key,
   Save,
@@ -10,9 +9,10 @@ import {
   Trash2,
   Lock,
   Globe,
+  Shield,
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
-import { useWorkspace } from "../../context/WorkspaceContext";
+import { useAuth } from "../../context/useAuth";
+import { useWorkspace } from "../../context/useWorkspace";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -30,11 +30,6 @@ export default function Settings() {
 
   const [wsName, setWsName] = useState(currentWorkspace?.name || "");
   const [wsDesc, setWsDesc] = useState(currentWorkspace?.description || "");
-
-  useEffect(() => {
-    setWsName(currentWorkspace?.name || "");
-    setWsDesc(currentWorkspace?.description || "");
-  }, [currentWorkspace?.id, currentWorkspace?.name, currentWorkspace?.description]);
 
   // Security Form State
   const [currentPassword, setCurrentPassword] = useState("");
@@ -98,7 +93,7 @@ export default function Settings() {
   };
 
   const handleDeleteToken = (id) => {
-    setApiTokens(apiTokens.filter((t) => t.id !== id));
+    setApiTokens((prev) => prev.filter((t) => t.id !== id));
     showToast("API token revoked.");
   };
 
@@ -111,7 +106,7 @@ export default function Settings() {
   ];
 
   return (
-    <div className="space-y-6 pb-12 select-none">
+    <div key={currentWorkspace?.id || "settings"} className="space-y-6 pb-12 select-none">
       {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed top-5 right-5 z-50 flex items-center gap-2 rounded-lg bg-[#161B22] border border-emerald-500/30 px-4 py-3 text-xs font-semibold text-emerald-400 shadow-2xl animate-in fade-in slide-in-from-top-3">

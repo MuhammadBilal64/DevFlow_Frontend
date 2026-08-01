@@ -16,7 +16,16 @@ export default function TaskDetailsModal({ isOpen, onClose, task, projectId, onT
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (task && isOpen) {
+    let isMounted = true;
+
+    if (!task || !isOpen) {
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    const initialize = async () => {
+      if (!isMounted) return;
       setTitle(task.title || "");
       setDescription(task.description || "");
       setPriority(task.priority ?? 1);
@@ -25,15 +34,25 @@ export default function TaskDetailsModal({ isOpen, onClose, task, projectId, onT
       setError("");
 
       if (projectId) {
-        getProjectMembers(projectId)
-          .then((res) => {
-            const raw = res?.data || res;
-            const items = Array.isArray(raw) ? raw : raw?.items ?? [];
-            setMembers(items);
-          })
-          .catch(() => setMembers([]));
+        try {
+          const res = await getProjectMembers(projectId);
+          if (!isMounted) return;
+          const raw = res?.data || res;
+          const items = Array.isArray(raw) ? raw : raw?.items ?? [];
+          setMembers(items);
+        } catch {
+          if (isMounted) {
+            setMembers([]);
+          }
+        }
       }
-    }
+    };
+
+    initialize();
+
+    return () => {
+      isMounted = false;
+    };
   }, [task, isOpen, projectId]);
 
   const handleSave = async (e) => {

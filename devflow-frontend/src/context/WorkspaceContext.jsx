@@ -1,17 +1,18 @@
 import {
   createContext,
-  useContext,
   useEffect,
-  useState,
   useCallback,
+  useState,
 } from "react";
 import {
   getMyWorkspaces,
   createWorkspace as createWorkspaceService,
 } from "../services/workspaceService";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "./useAuth";
 
 const WorkspaceContext = createContext(null);
+
+export { WorkspaceContext };
 
 export function WorkspaceProvider({ children }) {
   const [workspaces, setWorkspaces] = useState([]);
@@ -71,12 +72,26 @@ export function WorkspaceProvider({ children }) {
   };
 
   useEffect(() => {
-    if (user) {
-      loadWorkspaces();
-    } else {
-      setWorkspaces([]);
-      setCurrentWorkspace(null);
-    }
+    let ignore = false;
+
+    const init = async () => {
+      if (ignore) return;
+
+      if (!user) {
+        if (!ignore) {
+          setWorkspaces([]);
+          setCurrentWorkspace(null);
+        }
+        return;
+      }
+
+      await loadWorkspaces();
+    };
+
+    void init();
+    return () => {
+      ignore = true;
+    };
   }, [user, loadWorkspaces]);
 
   return (
@@ -95,10 +110,3 @@ export function WorkspaceProvider({ children }) {
   );
 }
 
-export function useWorkspace() {
-  const context = useContext(WorkspaceContext);
-  if (!context) {
-    throw new Error("useWorkspace must be used within WorkspaceProvider.");
-  }
-  return context;
-}

@@ -14,8 +14,8 @@ import {
   Plus,
   Check,
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
-import { useWorkspace } from "../../context/WorkspaceContext";
+import { useAuth } from "../../context/useAuth";
+import { useWorkspace } from "../../context/useWorkspace";
 import DevFlowLogo from "../common/DevFlowLogo";
 
 const menuItems = [

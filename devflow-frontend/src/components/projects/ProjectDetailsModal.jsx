@@ -17,13 +17,15 @@ export default function ProjectDetailsModal({ isOpen, onClose, project }) {
     if (!project?.id || !isOpen) return;
 
     let ignore = false;
-    setIsLoading(true);
-    setMemberError("");
+    const loadProjectDetails = async () => {
+      setIsLoading(true);
+      setMemberError("");
 
-    Promise.all([
-      getTasksByProject(project.id).catch(() => ({ data: [] })),
-      getProjectMembers(project.id).catch(() => ({ data: [] })),
-    ]).then(([taskRes, memberRes]) => {
+      const [taskRes, memberRes] = await Promise.all([
+        getTasksByProject(project.id).catch(() => ({ data: [] })),
+        getProjectMembers(project.id).catch(() => ({ data: [] })),
+      ]);
+
       if (ignore) return;
 
       const taskData = taskRes?.data || taskRes;
@@ -31,7 +33,9 @@ export default function ProjectDetailsModal({ isOpen, onClose, project }) {
       setTasks(Array.isArray(taskData) ? taskData : taskData?.items ?? []);
       setMembers(Array.isArray(memberData) ? memberData : memberData?.items ?? []);
       setIsLoading(false);
-    });
+    };
+
+    loadProjectDetails();
 
     return () => {
       ignore = true;
@@ -145,14 +149,23 @@ export default function ProjectDetailsModal({ isOpen, onClose, project }) {
               </div>
             )}
 
-            <form onSubmit={handleAddMember} className="flex gap-2">
+            <form onSubmit={handleAddMember} className="grid gap-3 sm:grid-cols-[1.4fr_0.9fr_0.7fr]">
               <input
                 type="number"
                 placeholder="User ID (e.g. 2)"
                 value={memberUserId}
                 onChange={(e) => setMemberUserId(e.target.value)}
-                className="flex-1 rounded-xl border border-[#1F2937] bg-[#0B0F17] px-3 py-2 text-xs text-white outline-none focus:border-[#1D63ED]"
+                className="rounded-xl border border-[#1F2937] bg-[#0B0F17] px-3 py-2 text-xs text-white outline-none focus:border-[#1D63ED]"
               />
+              <select
+                value={memberRole}
+                onChange={(e) => setMemberRole(Number(e.target.value))}
+                className="rounded-xl border border-[#1F2937] bg-[#0B0F17] px-3 py-2 text-xs text-white outline-none focus:border-[#1D63ED]"
+              >
+                <option value={0}>Owner</option>
+                <option value={1}>Admin</option>
+                <option value={2}>Member</option>
+              </select>
               <button
                 type="submit"
                 className="rounded-xl bg-[#1D63ED] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#1551C9] transition"

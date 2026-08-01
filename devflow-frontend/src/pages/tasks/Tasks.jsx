@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Calendar, FolderKanban, ArrowRight, ArrowLeft, CheckCircle2, RefreshCw, CheckSquare, Eye } from "lucide-react";
-import { useWorkspace } from "../../context/WorkspaceContext";
+import { Plus, Calendar, FolderKanban, ArrowRight, ArrowLeft, CheckCircle2, RefreshCw, CheckSquare } from "lucide-react";
+import { useWorkspace } from "../../context/useWorkspace";
 import { getTasksByProject, createTask, updateTaskStatus } from "../../services/taskService";
 import { getProjectsByWorkspace } from "../../services/projectService";
 import CreateTaskModal from "../../components/tasks/CreateTaskModal";
@@ -31,16 +31,25 @@ function Tasks() {
   const [actionError, setActionError] = useState("");
 
   // Fetch projects in workspace
-  useEffect(() => {
-    if (!currentWorkspace?.id) {
-      setIsLoading(false);
-      return;
-    }
-    let isCancelled = false;
-    setIsLoading(true);
+  const workspaceId = currentWorkspace?.id;
 
-    getProjectsByWorkspace(currentWorkspace.id)
-      .then((res) => {
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadProjects = async () => {
+      if (!workspaceId) {
+        if (!isCancelled) {
+          setProjects([]);
+          setSelectedProjectId(null);
+          setTasks([]);
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const res = await getProjectsByWorkspace(workspaceId);
         if (isCancelled) return;
         const raw = res?.data || res;
         const items = Array.isArray(raw) ? raw : raw?.items ?? [];
@@ -52,19 +61,21 @@ function Tasks() {
           setTasks([]);
           setIsLoading(false);
         }
-      })
-      .catch(() => {
+      } catch {
         if (isCancelled) return;
         setProjects([]);
         setSelectedProjectId(null);
         setTasks([]);
         setIsLoading(false);
-      });
+      }
+    };
+
+    loadProjects();
 
     return () => {
       isCancelled = true;
     };
-  }, [currentWorkspace?.id]);
+  }, [workspaceId]);
 
   // Fetch tasks for selected project
   const fetchTasks = useCallback(async () => {
@@ -88,38 +99,18 @@ function Tasks() {
   }, [selectedProjectId]);
 
   useEffect(() => {
-    if (!selectedProjectId) {
-      return;
-    }
-
     let ignore = false;
 
-    const load = async () => {
-      setIsLoading(true);
-      try {
-        const response = await getTasksByProject(selectedProjectId);
-        if (ignore) return;
-        const raw = response?.data || response;
-        const items = Array.isArray(raw) ? raw : raw?.items ?? [];
-        setTasks(items);
-      } catch (err) {
-        if (!ignore) {
-          console.warn("Could not fetch tasks from API:", err?.message || err);
-          setTasks([]);
-        }
-      } finally {
-        if (!ignore) {
-          setIsLoading(false);
-        }
-      }
+    const run = async () => {
+      if (ignore || !selectedProjectId) return;
+      await fetchTasks();
     };
 
-    load();
-
+    void run();
     return () => {
       ignore = true;
     };
-  }, [selectedProjectId]);
+  }, [selectedProjectId, fetchTasks]);
 
   // Status Change Handler (Kanban status transition)
   const handleStatusChange = async (taskId, newStatus, e) => {

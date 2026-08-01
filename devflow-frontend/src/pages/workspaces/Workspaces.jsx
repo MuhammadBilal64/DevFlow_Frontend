@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { Building2, Plus, UserPlus, Users, Trash2, CheckCircle2, Shield } from "lucide-react";
-import { useWorkspace } from "../../context/WorkspaceContext";
+import { Building2, Plus, UserPlus, Users, Trash2, CheckCircle2 } from "lucide-react";
+import { useWorkspace } from "../../context/useWorkspace";
 import { getWorkspaceMembers, addWorkspaceMember, removeWorkspaceMember } from "../../services/workspaceService";
 import CreateWorkspaceModal from "../../components/workspaces/CreateWorkspaceModal";
 import AddWorkspaceMemberModal from "../../components/workspaces/AddWorkspaceMemberModal";
@@ -21,14 +21,16 @@ function Workspaces() {
   const [membersLoading, setMembersLoading] = useState(true);
   const [memberError, setMemberError] = useState("");
 
+  const workspaceId = currentWorkspace?.id;
+
   const fetchMembers = useCallback(async () => {
-    if (!currentWorkspace?.id) {
+    if (!workspaceId) {
       setMembersLoading(false);
       return;
     }
     setMembersLoading(true);
     try {
-      const response = await getWorkspaceMembers(currentWorkspace.id);
+      const response = await getWorkspaceMembers(workspaceId);
       const raw = response?.data || response;
       const items = Array.isArray(raw) ? raw : raw?.items ?? [];
       setMembers(items);
@@ -38,22 +40,29 @@ function Workspaces() {
     } finally {
       setMembersLoading(false);
     }
-  }, [currentWorkspace?.id]);
+  }, [workspaceId]);
 
   useEffect(() => {
     let ignore = false;
 
-    const run = async () => {
-      if (ignore) return;
+    const load = async () => {
+      if (!workspaceId) {
+        if (!ignore) {
+          setMembers([]);
+          setMembersLoading(false);
+        }
+        return;
+      }
+
       await fetchMembers();
     };
 
-    run();
+    void load();
 
     return () => {
       ignore = true;
     };
-  }, [fetchMembers]);
+  }, [workspaceId, fetchMembers]);
 
   const handleAddMember = async (memberData) => {
     try {

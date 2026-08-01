@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function WorkflowCanvas() {
   return (
     <div className="w-full space-y-3 select-none">

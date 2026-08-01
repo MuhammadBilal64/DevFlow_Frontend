@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FolderKanban,
@@ -10,8 +10,8 @@ import {
   Workflow,
   UserPlus,
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
-import { useWorkspace } from "../../context/WorkspaceContext";
+import { useAuth } from "../../context/useAuth";
+import { useWorkspace } from "../../context/useWorkspace";
 import StatCard from "../../components/dashboard/StatCard";
 import Skeleton from "../../components/common/Skeleton";
 import CreateProjectModal from "../../components/projects/CreateProjectModal";
@@ -28,6 +28,7 @@ function Dashboard() {
   const { user } = useAuth();
   const { currentWorkspace } = useWorkspace();
   const navigate = useNavigate();
+  const workspaceId = currentWorkspace?.id;
 
   const [modalType, setModalType] = useState(null); // 'project', 'task', 'workflow', 'member'
   const [isLoading, setIsLoading] = useState(true);
@@ -41,8 +42,8 @@ function Dashboard() {
 
   const [recentProjects, setRecentProjects] = useState([]);
 
-  const loadDashboardData = async () => {
-    if (!currentWorkspace?.id) {
+  const loadDashboardData = useCallback(async () => {
+    if (!workspaceId) {
       setProjects([]);
       setRecentProjects([]);
       setStats({ projectsCount: 0, membersCount: 0, notificationsCount: 0 });
@@ -53,8 +54,8 @@ function Dashboard() {
     setIsLoading(true);
     try {
       const [projRes, memberRes, notifRes] = await Promise.all([
-        getProjectsByWorkspace(currentWorkspace.id).catch(() => ({ data: { items: [] } })),
-        getWorkspaceMembers(currentWorkspace.id).catch(() => ({ data: { items: [] } })),
+        getProjectsByWorkspace(workspaceId).catch(() => ({ data: { items: [] } })),
+        getWorkspaceMembers(workspaceId).catch(() => ({ data: { items: [] } })),
         getUnreadNotificationCount().catch(() => ({ data: { unreadCount: 0 } })),
       ]);
 
@@ -90,22 +91,21 @@ function Dashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [workspaceId]);
 
   useEffect(() => {
     let ignore = false;
 
-    const load = async () => {
+    const run = async () => {
       if (ignore) return;
       await loadDashboardData();
     };
 
-    load();
-
+    void run();
     return () => {
       ignore = true;
     };
-  }, [currentWorkspace?.id]);
+  }, [workspaceId, loadDashboardData]);
 
   const defaultProjectId = projects[0]?.id ?? null;
   const userName = user?.name || (user?.email ? user.email.split("@")[0] : "Developer");

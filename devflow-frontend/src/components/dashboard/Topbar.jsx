@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Plus, ChevronDown, Bell, Building2, CheckCircle2 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
-import { useWorkspace } from "../../context/WorkspaceContext";
+import { useAuth } from "../../context/useAuth";
+import { useWorkspace } from "../../context/useWorkspace";
 import { getUnreadNotificationCount } from "../../services/notificationService";
 import useSignalRNotification from "../../hooks/useSignalRNotification";
 import { NOTIFICATION_COUNT_REFRESH } from "../../utils/notificationEvents";
@@ -27,7 +27,7 @@ function Topbar() {
   const [toastMessage, setToastMessage] = useState(null);
   const toastTimerRef = useRef(null);
 
-  const fetchUnreadCount = useCallback(async () => {
+  const fetchUnreadCount = async () => {
     try {
       const res = await getUnreadNotificationCount();
       const count = res?.data?.unreadCount ?? 0;
@@ -37,7 +37,7 @@ function Topbar() {
     } catch (err) {
       console.warn("Failed to fetch unread notification count:", err?.message || err);
     }
-  }, []);
+  };
 
   useSignalRNotification((notification) => {
     setUnreadCount((prev) => prev + 1);
@@ -54,12 +54,32 @@ function Topbar() {
   });
 
   useEffect(() => {
-    fetchUnreadCount();
-  }, [fetchUnreadCount]);
+    let ignore = false;
+
+    const loadUnreadCount = async () => {
+      try {
+        const res = await getUnreadNotificationCount();
+        if (ignore) return;
+        const count = res?.data?.unreadCount ?? 0;
+        if (typeof count === "number") {
+          setUnreadCount(count);
+        }
+      } catch (err) {
+        if (!ignore) {
+          console.warn("Failed to fetch unread notification count:", err?.message || err);
+        }
+      }
+    };
+
+    loadUnreadCount();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
     const handleRefresh = () => {
-      fetchUnreadCount();
+      void fetchUnreadCount();
     };
 
     window.addEventListener(NOTIFICATION_COUNT_REFRESH, handleRefresh);
@@ -69,7 +89,7 @@ function Topbar() {
         clearTimeout(toastTimerRef.current);
       }
     };
-  }, [fetchUnreadCount]);
+  }, []);
 
   const currentRouteHeader = routeHeaders[location.pathname] || {
     title: "Dashboard",

@@ -1,4 +1,4 @@
-import { useWorkspace } from "../../context/WorkspaceContext";
+import { useWorkspace } from "../../context/useWorkspace";
 
 function DashboardHeader() {
   const { currentWorkspace } = useWorkspace();

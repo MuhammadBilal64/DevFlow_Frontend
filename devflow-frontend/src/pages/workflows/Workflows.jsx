@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Workflow, Plus, Zap, CheckCircle2, XCircle, FolderKanban } from "lucide-react";
-import { useWorkspace } from "../../context/WorkspaceContext";
+import { useWorkspace } from "../../context/useWorkspace";
 import { getWorkflowsByProject, createWorkflow, enableWorkflow, disableWorkflow } from "../../services/workflowService";
 import { getProjectsByWorkspace } from "../../services/projectService";
 import CreateWorkflowModal from "../../components/workflows/CreateWorkflowModal";
@@ -15,6 +15,7 @@ const triggerLabels = {
 
 function Workflows() {
   const { currentWorkspace } = useWorkspace();
+  const workspaceId = currentWorkspace?.id;
   const [workflows, setWorkflows] = useState([]);
   const [projects, setProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
@@ -22,40 +23,50 @@ function Workflows() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [actionError, setActionError] = useState("");
 
-  useEffect(() => {
-    if (!currentWorkspace?.id) {
+  const loadProjectList = useCallback(async () => {
+    if (!workspaceId) {
+      setProjects([]);
+      setSelectedProjectId(null);
+      setWorkflows([]);
       setIsLoading(false);
       return;
     }
-    let isCancelled = false;
-    setIsLoading(true);
 
-    getProjectsByWorkspace(currentWorkspace.id)
-      .then((res) => {
-        if (isCancelled) return;
-        const raw = res?.data || res;
-        const items = Array.isArray(raw) ? raw : raw?.items ?? [];
-        setProjects(items);
-        if (items.length > 0) {
-          setSelectedProjectId(items[0].id);
-        } else {
-          setSelectedProjectId(null);
-          setWorkflows([]);
-          setIsLoading(false);
-        }
-      })
-      .catch(() => {
-        if (isCancelled) return;
-        setProjects([]);
+    setIsLoading(true);
+    try {
+      const res = await getProjectsByWorkspace(workspaceId);
+      const raw = res?.data || res;
+      const items = Array.isArray(raw) ? raw : raw?.items ?? [];
+      setProjects(items);
+      if (items.length > 0) {
+        setSelectedProjectId(items[0].id);
+      } else {
         setSelectedProjectId(null);
         setWorkflows([]);
         setIsLoading(false);
-      });
+      }
+    } catch {
+      setProjects([]);
+      setSelectedProjectId(null);
+      setWorkflows([]);
+      setIsLoading(false);
+    }
+  }, [workspaceId]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const load = async () => {
+      if (ignore) return;
+      await loadProjectList();
+    };
+
+    void load();
 
     return () => {
-      isCancelled = true;
+      ignore = true;
     };
-  }, [currentWorkspace?.id]);
+  }, [workspaceId, loadProjectList]);
 
   const fetchWorkflows = useCallback(async () => {
     if (!selectedProjectId) {

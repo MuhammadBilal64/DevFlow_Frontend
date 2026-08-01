@@ -2,7 +2,6 @@
 import DevFlowLogo from "../../components/common/DevFlowLogo";
 import {
   ArrowRight,
-  BarChart3,
   CheckSquare,
   FolderKanban,
   Home,
@@ -10,12 +9,10 @@ import {
   ListChecks,
   Plus,
   Search,
-  ShieldCheck,
-  Users,
   Workflow,
   Zap,
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 
 export default function LandingPage() {
   const navigate = useNavigate();

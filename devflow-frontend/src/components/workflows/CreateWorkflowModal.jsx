@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Modal from "../common/Modal";
 
-export default function CreateWorkflowModal({ isOpen, onClose, onCreate, projectId }) {
+export default function CreateWorkflowModal({ isOpen, onClose, onCreate }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [trigger, setTrigger] = useState(0); // 0 = TaskAssigned, 1 = TaskCompleted, 2 = ProjectCreated

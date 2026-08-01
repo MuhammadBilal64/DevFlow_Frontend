@@ -1,5 +1,5 @@
 import { ChevronDown } from "lucide-react";
-import { useWorkspace } from "../../context/WorkspaceContext";
+import { useWorkspace } from "../../context/useWorkspace";
 
 function WorkspaceSwitcher() {
   const {

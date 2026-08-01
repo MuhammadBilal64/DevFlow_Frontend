@@ -1,8 +1,10 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useState } from "react";
 import { getUserFromToken } from "../utils/tokenUtils";
 import { logout as logoutApi } from "../services/authService";
 
 const AuthContext = createContext();
+
+export { AuthContext };
 
 export function AuthProvider({ children }) {
   const [accessToken, setAccessToken] = useState(
@@ -88,8 +90,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  return useContext(AuthContext);
 }

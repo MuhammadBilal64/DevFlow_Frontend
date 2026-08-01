@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { FolderKanban, Plus, Search, Filter, RefreshCw, Eye } from "lucide-react";
-import { useWorkspace } from "../../context/WorkspaceContext";
+import { useWorkspace } from "../../context/useWorkspace";
 import { getProjectsByWorkspace, createProject } from "../../services/projectService";
 import CreateProjectModal from "../../components/projects/CreateProjectModal";
 import ProjectDetailsModal from "../../components/projects/ProjectDetailsModal";
@@ -15,15 +15,17 @@ function Projects() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
 
+  const workspaceId = currentWorkspace?.id;
+
   const fetchProjects = useCallback(async () => {
-    if (!currentWorkspace?.id) {
+    if (!workspaceId) {
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
 
     try {
-      const response = await getProjectsByWorkspace(currentWorkspace.id);
+      const response = await getProjectsByWorkspace(workspaceId);
       const raw = response?.data || response;
       const items = Array.isArray(raw)
         ? raw
@@ -40,7 +42,7 @@ function Projects() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentWorkspace?.id]);
+  }, [workspaceId]);
 
   useEffect(() => {
     let ignore = false;
@@ -50,12 +52,14 @@ function Projects() {
       await fetchProjects();
     };
 
-    run();
+    if (workspaceId) {
+      void run();
+    }
 
     return () => {
       ignore = true;
     };
-  }, [fetchProjects]);
+  }, [workspaceId, fetchProjects]);
 
   const handleCreateProject = async (data) => {
     try {

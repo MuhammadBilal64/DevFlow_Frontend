@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import * as signalR from "@microsoft/signalr";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 /**
  * Custom hook to manage SignalR WebSocket connection to /notificationHub
