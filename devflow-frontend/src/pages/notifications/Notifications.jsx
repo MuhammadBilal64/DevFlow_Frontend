@@ -38,7 +38,18 @@ function Notifications() {
   }, []);
 
   useEffect(() => {
-    fetchNotifications();
+    let ignore = false;
+
+    const run = async () => {
+      if (ignore) return;
+      await fetchNotifications();
+    };
+
+    run();
+
+    return () => {
+      ignore = true;
+    };
   }, [fetchNotifications]);
 
   const handleMarkAllRead = async () => {

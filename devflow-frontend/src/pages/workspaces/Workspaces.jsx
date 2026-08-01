@@ -41,7 +41,18 @@ function Workspaces() {
   }, [currentWorkspace?.id]);
 
   useEffect(() => {
-    fetchMembers();
+    let ignore = false;
+
+    const run = async () => {
+      if (ignore) return;
+      await fetchMembers();
+    };
+
+    run();
+
+    return () => {
+      ignore = true;
+    };
   }, [fetchMembers]);
 
   const handleAddMember = async (memberData) => {

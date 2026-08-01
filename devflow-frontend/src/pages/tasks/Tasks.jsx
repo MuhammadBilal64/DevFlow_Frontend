@@ -36,10 +36,12 @@ function Tasks() {
       setIsLoading(false);
       return;
     }
+    let isCancelled = false;
     setIsLoading(true);
 
     getProjectsByWorkspace(currentWorkspace.id)
       .then((res) => {
+        if (isCancelled) return;
         const raw = res?.data || res;
         const items = Array.isArray(raw) ? raw : raw?.items ?? [];
         setProjects(items);
@@ -52,11 +54,16 @@ function Tasks() {
         }
       })
       .catch(() => {
+        if (isCancelled) return;
         setProjects([]);
         setSelectedProjectId(null);
         setTasks([]);
         setIsLoading(false);
       });
+
+    return () => {
+      isCancelled = true;
+    };
   }, [currentWorkspace?.id]);
 
   // Fetch tasks for selected project
@@ -81,10 +88,38 @@ function Tasks() {
   }, [selectedProjectId]);
 
   useEffect(() => {
-    if (selectedProjectId) {
-      fetchTasks();
+    if (!selectedProjectId) {
+      return;
     }
-  }, [selectedProjectId, fetchTasks]);
+
+    let ignore = false;
+
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const response = await getTasksByProject(selectedProjectId);
+        if (ignore) return;
+        const raw = response?.data || response;
+        const items = Array.isArray(raw) ? raw : raw?.items ?? [];
+        setTasks(items);
+      } catch (err) {
+        if (!ignore) {
+          console.warn("Could not fetch tasks from API:", err?.message || err);
+          setTasks([]);
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    load();
+
+    return () => {
+      ignore = true;
+    };
+  }, [selectedProjectId]);
 
   // Status Change Handler (Kanban status transition)
   const handleStatusChange = async (taskId, newStatus, e) => {

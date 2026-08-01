@@ -89,7 +89,7 @@ export default function LandingPage() {
 
           {/* Subtitle */}
           <p className="mx-auto max-w-2xl text-sm sm:text-base text-slate-400 leading-relaxed">
-            DevFlow brings project management, real-time Kanban sprint boards, and event-driven automation rules into one collaborative workspace—built for modern engineering teams.
+            DevFlow unifies project planning, realtime sprint boards, and rule-based automation into a single engineering workspace designed for fast-moving teams.
           </p>
 
           {/* Hero CTAs */}
@@ -201,7 +201,7 @@ export default function LandingPage() {
               </div>
               <h4 className="text-sm font-semibold text-white">Workflow Automation</h4>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Configure rule triggers that automatically reassign tasks, notify developers, and execute background tasks.
+                Build automation rules that trigger task updates, team alerts, and workflow actions based on project events.
               </p>
             </div>
 
@@ -211,7 +211,7 @@ export default function LandingPage() {
               </div>
               <h4 className="text-sm font-semibold text-white">Team Collaboration</h4>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Manage workspace members with granular access controls (`Owner`, `Admin`, `Member`).
+                Manage workspace access with role-based permissions for owners, admins and collaborators.
               </p>
             </div>
 
@@ -231,7 +231,7 @@ export default function LandingPage() {
               </div>
               <h4 className="text-sm font-semibold text-white">JWT Bearer Security</h4>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Secure token validation with automatic refresh token rotation (`/api/Auth/refresh`).
+                Enterprise-grade JWT authentication with secure refresh token rotation for seamless, session-safe access.
               </p>
             </div>
           </div>
@@ -291,7 +291,7 @@ export default function LandingPage() {
                 Increase Output and Reduce Manual Overhead
               </h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                DevFlow integrates task boards with automated execution rules so engineers spend less time updating status and more time shipping code.
+                DevFlow combines task boards, automation, and realtime collaboration so teams can move faster with less manual coordination.
               </p>
 
               <div className="space-y-2.5 pt-1 text-xs text-slate-300">

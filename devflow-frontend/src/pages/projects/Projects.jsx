@@ -43,7 +43,18 @@ function Projects() {
   }, [currentWorkspace?.id]);
 
   useEffect(() => {
-    fetchProjects();
+    let ignore = false;
+
+    const run = async () => {
+      if (ignore) return;
+      await fetchProjects();
+    };
+
+    run();
+
+    return () => {
+      ignore = true;
+    };
   }, [fetchProjects]);
 
   const handleCreateProject = async (data) => {

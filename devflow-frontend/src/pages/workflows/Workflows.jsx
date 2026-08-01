@@ -27,10 +27,12 @@ function Workflows() {
       setIsLoading(false);
       return;
     }
+    let isCancelled = false;
     setIsLoading(true);
 
     getProjectsByWorkspace(currentWorkspace.id)
       .then((res) => {
+        if (isCancelled) return;
         const raw = res?.data || res;
         const items = Array.isArray(raw) ? raw : raw?.items ?? [];
         setProjects(items);
@@ -43,11 +45,16 @@ function Workflows() {
         }
       })
       .catch(() => {
+        if (isCancelled) return;
         setProjects([]);
         setSelectedProjectId(null);
         setWorkflows([]);
         setIsLoading(false);
       });
+
+    return () => {
+      isCancelled = true;
+    };
   }, [currentWorkspace?.id]);
 
   const fetchWorkflows = useCallback(async () => {
@@ -71,10 +78,38 @@ function Workflows() {
   }, [selectedProjectId]);
 
   useEffect(() => {
-    if (selectedProjectId) {
-      fetchWorkflows();
+    if (!selectedProjectId) {
+      return;
     }
-  }, [selectedProjectId, fetchWorkflows]);
+
+    let ignore = false;
+
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const response = await getWorkflowsByProject(selectedProjectId);
+        if (ignore) return;
+        const raw = response?.data || response;
+        const items = Array.isArray(raw) ? raw : raw?.items ?? [];
+        setWorkflows(items);
+      } catch (err) {
+        if (!ignore) {
+          console.warn("Could not fetch workflows:", err?.message || err);
+          setWorkflows([]);
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    load();
+
+    return () => {
+      ignore = true;
+    };
+  }, [selectedProjectId]);
 
   const handleToggleEnable = async (workflow) => {
     const nextState = !workflow.isEnabled;

@@ -23,10 +23,10 @@ export default function Settings() {
 
   // Profile Form State
   const [displayName, setDisplayName] = useState(
-    user?.name || (user?.email ? user.email.split("@")[0] : "User")
+    user?.name || (user?.email ? user.email.split("@")[0] : "")
   );
-  const [jobTitle, setJobTitle] = useState("Developer");
-  const [bio, setBio] = useState("");
+  const [jobTitle, setJobTitle] = useState(user?.jobTitle || "");
+  const [bio, setBio] = useState(user?.bio || "");
 
   const [wsName, setWsName] = useState(currentWorkspace?.name || "");
   const [wsDesc, setWsDesc] = useState(currentWorkspace?.description || "");

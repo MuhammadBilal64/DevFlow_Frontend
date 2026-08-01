@@ -41,24 +41,22 @@ function Dashboard() {
 
   const [recentProjects, setRecentProjects] = useState([]);
 
-  useEffect(() => {
+  const loadDashboardData = async () => {
     if (!currentWorkspace?.id) {
-      setIsLoading(false);
       setProjects([]);
       setRecentProjects([]);
       setStats({ projectsCount: 0, membersCount: 0, notificationsCount: 0 });
+      setIsLoading(false);
       return;
     }
 
-    let ignore = false;
     setIsLoading(true);
-
-    Promise.all([
-      getProjectsByWorkspace(currentWorkspace.id).catch(() => ({ data: { items: [] } })),
-      getWorkspaceMembers(currentWorkspace.id).catch(() => ({ data: { items: [] } })),
-      getUnreadNotificationCount().catch(() => ({ data: { unreadCount: 0 } })),
-    ]).then(([projRes, memberRes, notifRes]) => {
-      if (ignore) return;
+    try {
+      const [projRes, memberRes, notifRes] = await Promise.all([
+        getProjectsByWorkspace(currentWorkspace.id).catch(() => ({ data: { items: [] } })),
+        getWorkspaceMembers(currentWorkspace.id).catch(() => ({ data: { items: [] } })),
+        getUnreadNotificationCount().catch(() => ({ data: { unreadCount: 0 } })),
+      ]);
 
       const projs = projRes?.data || projRes;
       const members = memberRes?.data || memberRes;
@@ -66,17 +64,43 @@ function Dashboard() {
 
       const pItems = Array.isArray(projs) ? projs : projs?.items ?? [];
       const mItems = Array.isArray(members) ? members : members?.items ?? [];
+      const pCount = typeof projs?.totalCount === "number"
+        ? projs.totalCount
+        : typeof projs?.total === "number"
+        ? projs.total
+        : pItems.length;
+      const mCount = typeof members?.totalCount === "number"
+        ? members.totalCount
+        : typeof members?.total === "number"
+        ? members.total
+        : mItems.length;
       const nCount = typeof notifs?.unreadCount === "number" ? notifs.unreadCount : 0;
 
       setProjects(pItems);
       setStats({
-        projectsCount: pItems.length,
-        membersCount: mItems.length,
+        projectsCount: pCount,
+        membersCount: mCount,
         notificationsCount: nCount,
       });
       setRecentProjects(pItems.slice(0, 4));
+    } catch {
+      setProjects([]);
+      setRecentProjects([]);
+      setStats({ projectsCount: 0, membersCount: 0, notificationsCount: 0 });
+    } finally {
       setIsLoading(false);
-    });
+    }
+  };
+
+  useEffect(() => {
+    let ignore = false;
+
+    const load = async () => {
+      if (ignore) return;
+      await loadDashboardData();
+    };
+
+    load();
 
     return () => {
       ignore = true;
@@ -86,13 +110,6 @@ function Dashboard() {
   const defaultProjectId = projects[0]?.id ?? null;
   const userName = user?.name || (user?.email ? user.email.split("@")[0] : "Developer");
   const formattedName = userName.charAt(0).toUpperCase() + userName.slice(1);
-
-  const handleProjectCardKeyDown = (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      navigate("/projects");
-    }
-  };
 
   return (
     <div className="space-y-8 pb-10">
@@ -226,13 +243,11 @@ function Dashboard() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {recentProjects.map((p) => (
-              <div
+              <button
                 key={p.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => navigate("/projects")}
-                onKeyDown={handleProjectCardKeyDown}
-                className="rounded-xl border border-[#30363D] bg-[#161B22] p-4 space-y-2 hover:border-sky-500 transition cursor-pointer"
+                type="button"
+                onClick={() => navigate("/projects", { state: { projectId: p.id } })}
+                className="rounded-xl border border-[#30363D] bg-[#161B22] p-4 text-left space-y-2 hover:border-sky-500 transition cursor-pointer"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
@@ -246,7 +261,7 @@ function Dashboard() {
                 <p className="text-[11px] text-slate-400 line-clamp-2">
                   {p.description || "Workspace project"}
                 </p>
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -257,6 +272,7 @@ function Dashboard() {
         onClose={() => setModalType(null)}
         onCreate={async (data) => {
           await createProject(data);
+          await loadDashboardData();
           setModalType(null);
         }}
         workspaceId={currentWorkspace?.id}
@@ -271,6 +287,7 @@ function Dashboard() {
             throw new Error("No project available. Create a project first.");
           }
           await createTask(defaultProjectId, data);
+          await loadDashboardData();
           setModalType(null);
         }}
       />
@@ -284,6 +301,7 @@ function Dashboard() {
             throw new Error("No project available. Create a project first.");
           }
           await createWorkflow(defaultProjectId, data);
+          await loadDashboardData();
           setModalType(null);
         }}
       />
@@ -296,6 +314,7 @@ function Dashboard() {
             throw new Error("No workspace selected. Please select a workspace first.");
           }
           await addWorkspaceMember(currentWorkspace.id, data);
+          await loadDashboardData();
           setModalType(null);
         }}
       />

@@ -96,7 +96,7 @@ export default function CreateWorkflowModal({ isOpen, onClose, onCreate, project
           </label>
           <select
             value={trigger}
-            onChange={(e) => setTrigger(e.target.value)}
+            onChange={(e) => setTrigger(Number(e.target.value))}
             className="w-full rounded-xl border border-[#1F2937] bg-[#0B0F17] px-3.5 py-2.5 text-xs text-white outline-none focus:border-[#1D63ED]"
           >
             <option value={0}>Task Assigned</option>
@@ -123,7 +123,7 @@ export default function CreateWorkflowModal({ isOpen, onClose, onCreate, project
 
             <select
               value={operator}
-              onChange={(e) => setOperator(e.target.value)}
+              onChange={(e) => setOperator(Number(e.target.value))}
               className="rounded-lg border border-[#1F2937] bg-[#121721] px-2 py-1.5 text-xs text-white outline-none"
             >
               <option value={0}>Equals (==)</option>

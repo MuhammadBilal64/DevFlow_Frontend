@@ -15,7 +15,19 @@ export function AuthProvider({ children }) {
 
   const [user, setUser] = useState(() => {
     const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
-    return token ? getUserFromToken(token) : null;
+    const decoded = token ? getUserFromToken(token) : null;
+    if (decoded) return decoded;
+
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        return JSON.parse(storedUser);
+      } catch {
+        return null;
+      }
+    }
+
+    return null;
   });
 
   const login = (authData) => {
@@ -40,6 +52,7 @@ export function AuthProvider({ children }) {
 
     setAccessToken(tokenVal);
     setUser(decodedUser);
+    localStorage.setItem("user", JSON.stringify(decodedUser));
   };
 
   const logout = async () => {

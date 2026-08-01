@@ -45,8 +45,12 @@ function Topbar() {
 
     if (toastTimerRef.current) {
       clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = null;
     }
-    toastTimerRef.current = setTimeout(() => setToastMessage(null), 4000);
+    toastTimerRef.current = setTimeout(() => {
+      setToastMessage(null);
+      toastTimerRef.current = null;
+    }, 4000);
   });
 
   useEffect(() => {

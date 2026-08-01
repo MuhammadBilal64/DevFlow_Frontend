@@ -28,11 +28,11 @@ function WorkspaceSwitcher() {
           }}
           className="w-72 appearance-none rounded-lg border border-[#30363D] bg-[#161B22] px-4 py-3 text-white outline-none"
         >
+          <option value="" disabled>
+            {workspaces.length === 0 ? "No workspaces available" : "Select workspace"}
+          </option>
           {workspaces.map((workspace) => (
-            <option
-              key={workspace.id}
-              value={workspace.id}
-            >
+            <option key={workspace.id} value={workspace.id}>
               {workspace.name}
             </option>
           ))}
