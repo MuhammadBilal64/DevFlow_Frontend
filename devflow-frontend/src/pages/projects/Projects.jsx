@@ -76,6 +76,15 @@ function Projects() {
     }
   };
 
+  const handleProjectUpdated = (updatedProject) => {
+    setProjects((prev) =>
+      prev.map((p) => (p.id === updatedProject.id ? { ...p, ...updatedProject } : p))
+    );
+    setSelectedProject((prev) =>
+      prev?.id === updatedProject.id ? { ...prev, ...updatedProject } : prev
+    );
+  };
+
   const filteredProjects = projects.filter((p) =>
     (p.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
     (p.description || "").toLowerCase().includes(searchTerm.toLowerCase())
@@ -190,6 +199,7 @@ function Projects() {
         isOpen={Boolean(selectedProject)}
         onClose={() => setSelectedProject(null)}
         project={selectedProject}
+        onProjectUpdated={handleProjectUpdated}
       />
     </div>
   );

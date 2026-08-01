@@ -1,16 +1,127 @@
 import { useState, useEffect } from "react";
+import { Save, Trash2 } from "lucide-react";
 import Modal from "../common/Modal";
 import { getTasksByProject } from "../../services/taskService";
-import { getProjectMembers, addProjectMember } from "../../services/projectService";
+import {
+  getProjectMembers,
+  addProjectMember,
+  removeProjectMember,
+  updateProject,
+} from "../../services/projectService";
 import Skeleton from "../common/Skeleton";
 
-export default function ProjectDetailsModal({ isOpen, onClose, project }) {
+const roleLabels = {
+  0: "Owner",
+  1: "Admin",
+  2: "Member",
+};
+
+function ProjectOverviewForm({ project, onProjectUpdated }) {
+  const [editName, setEditName] = useState(project.name || "");
+  const [editDescription, setEditDescription] = useState(project.description || "");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  const handleSaveProject = async (e) => {
+    e.preventDefault();
+    if (!project?.id) return;
+
+    const trimmedName = editName.trim();
+    if (!trimmedName) {
+      setSaveError("Project name is required.");
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError("");
+
+    try {
+      await updateProject(project.id, {
+        name: trimmedName,
+        description: editDescription.trim(),
+      });
+
+      onProjectUpdated?.({
+        ...project,
+        name: trimmedName,
+        description: editDescription.trim(),
+      });
+    } catch (err) {
+      setSaveError(err?.message || "Failed to update project.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSaveProject} className="space-y-4 pt-1">
+      {saveError && (
+        <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 p-3 text-xs text-rose-300">
+          {saveError}
+        </div>
+      )}
+
+      <div>
+        <label className="block text-xs font-medium text-slate-300 mb-1.5">
+          Project Name
+        </label>
+        <input
+          type="text"
+          value={editName}
+          onChange={(e) => setEditName(e.target.value)}
+          className="w-full rounded-xl border border-[#1F2937] bg-[#0B0F17] px-3.5 py-2.5 text-xs text-white outline-none focus:border-[#1D63ED]"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-slate-300 mb-1.5">
+          Description
+        </label>
+        <textarea
+          rows={3}
+          value={editDescription}
+          onChange={(e) => setEditDescription(e.target.value)}
+          placeholder="Describe the objectives and scope of this project"
+          className="w-full rounded-xl border border-[#1F2937] bg-[#0B0F17] px-3.5 py-2.5 text-xs text-white placeholder-slate-500 outline-none focus:border-[#1D63ED] resize-none"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-xl border border-[#1F2937] bg-[#0B0F17] p-3.5">
+          <span className="text-[10px] text-[#6B7280]">Status</span>
+          <p className="text-xs font-semibold text-[#38BDF8] mt-0.5">
+            {project.status || "In Progress"}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-[#1F2937] bg-[#0B0F17] p-3.5">
+          <span className="text-[10px] text-[#6B7280]">Workspace ID</span>
+          <p className="text-xs font-semibold text-white mt-0.5">
+            #{project.workspaceId || "—"}
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        disabled={isSaving}
+        className="flex items-center gap-2 rounded-xl bg-[#1D63ED] px-4 py-2 text-xs font-semibold text-white hover:bg-[#1551C9] disabled:opacity-50 transition"
+      >
+        <Save size={14} />
+        <span>{isSaving ? "Saving..." : "Save Changes"}</span>
+      </button>
+    </form>
+  );
+}
+
+export default function ProjectDetailsModal({ isOpen, onClose, project, onProjectUpdated }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [tasks, setTasks] = useState([]);
   const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [memberUserId, setMemberUserId] = useState("");
-  const [memberRole, setMemberRole] = useState(2); // 2 = Member
+  const [memberRole, setMemberRole] = useState(2);
   const [memberError, setMemberError] = useState("");
 
   useEffect(() => {
@@ -19,7 +130,6 @@ export default function ProjectDetailsModal({ isOpen, onClose, project }) {
     let ignore = false;
     const loadProjectDetails = async () => {
       setIsLoading(true);
-      setMemberError("");
 
       const [taskRes, memberRes] = await Promise.all([
         getTasksByProject(project.id).catch(() => ({ data: [] })),
@@ -52,20 +162,38 @@ export default function ProjectDetailsModal({ isOpen, onClose, project }) {
         userId: parseInt(memberUserId, 10),
         role: parseInt(memberRole, 10),
       });
-      setMembers((prev) => [
-        ...prev,
-        { userId: parseInt(memberUserId, 10), role: parseInt(memberRole, 10) },
-      ]);
+
+      const memberRes = await getProjectMembers(project.id);
+      const memberData = memberRes?.data || memberRes;
+      setMembers(Array.isArray(memberData) ? memberData : memberData?.items ?? []);
       setMemberUserId("");
     } catch (err) {
       setMemberError(err?.message || "Failed to add member.");
     }
   };
 
+  const handleRemoveMember = async (member) => {
+    const userId = member.userId || member.id;
+    if (!userId || !project?.id) return;
+
+    const previousMembers = members;
+    setMemberError("");
+    setMembers((prev) => prev.filter((m) => (m.userId || m.id) !== userId));
+
+    try {
+      await removeProjectMember(project.id, userId);
+    } catch (err) {
+      setMembers(previousMembers);
+      setMemberError(err?.message || "Failed to remove member.");
+    }
+  };
+
   if (!project) return null;
 
+  const modalTitle = project.name || "Project Details";
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={project.name || "Project Details"}>
+    <Modal isOpen={isOpen} onClose={onClose} title={modalTitle}>
       <div className="space-y-4">
         <div className="flex border-b border-[#1F2937] gap-4 text-xs font-medium">
           {["overview", "tasks", "members"].map((tab) => (
@@ -85,32 +213,11 @@ export default function ProjectDetailsModal({ isOpen, onClose, project }) {
         </div>
 
         {activeTab === "overview" && (
-          <div className="space-y-4 pt-1">
-            <div className="rounded-xl border border-[#1F2937] bg-[#0B0F17] p-4">
-              <span className="text-[10px] font-semibold uppercase text-slate-500 tracking-wider">
-                Description
-              </span>
-              <p className="text-xs text-white mt-1">
-                {project.description || "No description provided for this project."}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-[#1F2937] bg-[#0B0F17] p-3.5">
-                <span className="text-[10px] text-[#6B7280]">Status</span>
-                <p className="text-xs font-semibold text-[#38BDF8] mt-0.5">
-                  {project.status || "In Progress"}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-[#1F2937] bg-[#0B0F17] p-3.5">
-                <span className="text-[10px] text-[#6B7280]">Workspace ID</span>
-                <p className="text-xs font-semibold text-white mt-0.5">
-                  #{project.workspaceId || "—"}
-                </p>
-              </div>
-            </div>
-          </div>
+          <ProjectOverviewForm
+            key={project.id}
+            project={project}
+            onProjectUpdated={onProjectUpdated}
+          />
         )}
 
         {activeTab === "tasks" && (
@@ -188,11 +295,34 @@ export default function ProjectDetailsModal({ isOpen, onClose, project }) {
               ) : (
                 members.map((m, idx) => (
                   <div
-                    key={m.userId || idx}
+                    key={m.userId || m.id || idx}
                     className="flex items-center justify-between rounded-xl border border-[#1F2937] bg-[#0B0F17] p-3 text-xs"
                   >
-                    <span className="text-white">User #{m.userId || m.id}</span>
-                    <span className="text-slate-400">Role: {m.role === 0 ? "Owner" : m.role === 1 ? "Admin" : "Member"}</span>
+                    <div>
+                      <span className="text-white block">
+                        {m.name || m.email || `User #${m.userId || m.id}`}
+                      </span>
+                      {m.email && (
+                        <span className="text-[11px] text-slate-500">{m.email}</span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <span className="text-slate-400">
+                        {roleLabels[m.role ?? 2] || "Member"}
+                      </span>
+
+                      {m.role !== 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMember(m)}
+                          className="p-1.5 text-slate-500 hover:text-rose-400 transition"
+                          title="Remove member"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
