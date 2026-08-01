@@ -1,15 +1,18 @@
-import { useNavigate, Link } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
 import DevFlowLogo from "../../components/common/DevFlowLogo";
 import {
-  FolderKanban,
-  CheckSquare,
-  Workflow,
-  Users,
-  Bell,
   ArrowRight,
+  BarChart3,
+  CheckSquare,
+  FolderKanban,
+  Home,
+  Layers,
+  ListChecks,
+  Plus,
+  Search,
   ShieldCheck,
-  CheckCircle2,
-  ChevronRight,
+  Users,
+  Workflow,
   Zap,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
@@ -19,364 +22,277 @@ export default function LandingPage() {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-[#0D1117] text-[#F0F6FC] font-sans antialiased selection:bg-sky-500/20 selection:text-sky-200">
-      {/* Header Navigation */}
-      <header className="sticky top-0 z-50 border-b border-[#30363D] bg-[#0D1117]/90 backdrop-blur-md px-6 lg:px-12 py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
+    <div className="min-h-screen bg-[#0B0F17] text-[#E6EDF3] font-sans antialiased selection:bg-sky-500/20 selection:text-sky-200">
+      <header className="sticky top-0 z-50 border-b border-[#30363D] bg-[#0B0F17]/95 backdrop-blur-sm px-6 lg:px-12 py-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-6">
           <DevFlowLogo size="md" />
 
-          {/* Nav Links */}
-          <nav className="hidden md:flex items-center gap-8 text-xs font-medium text-slate-400">
-            <a href="#features" className="hover:text-white transition">
+          <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-slate-400">
+            <a href="#features" className="transition hover:text-white">
               Features
             </a>
-            <a href="#how-it-works" className="hover:text-white transition">
-              How It Works
+            <a href="#workflow" className="transition hover:text-white">
+              Workflow
             </a>
-            <a href="#benefits" className="hover:text-white transition">
-              Benefits
-            </a>
-            <a href="#automation" className="hover:text-white transition">
-              Automation
+            <a href="#cta" className="transition hover:text-white">
+              Start
             </a>
           </nav>
 
-          {/* Auth CTAs */}
           <div className="flex items-center gap-3">
-            {user ? (
-              <button
-                onClick={() => navigate("/dashboard")}
-                className="flex items-center gap-2 rounded-lg bg-[#F0F6FC] px-4 py-2 text-xs font-semibold text-[#0D1117] hover:bg-white transition cursor-pointer"
-              >
-                <span>Go to Dashboard</span>
-                <ArrowRight size={14} />
-              </button>
-            ) : (
-              <>
-                <button
-                  onClick={() => navigate("/auth/login")}
-                  className="rounded-lg border border-[#30363D] bg-[#161B22] px-4 py-2 text-xs font-medium text-slate-300 hover:border-slate-500 hover:text-white transition cursor-pointer"
-                >
-                  Sign in
-                </button>
-                <button
-                  onClick={() => navigate("/auth/register")}
-                  className="flex items-center gap-1.5 rounded-lg bg-[#F0F6FC] px-4 py-2 text-xs font-semibold text-[#0D1117] hover:bg-white transition cursor-pointer"
-                >
-                  <span>Get Started Free</span>
-                  <ChevronRight size={14} />
-                </button>
-              </>
-            )}
+            <button
+              onClick={() => navigate("/auth/login")}
+              className="rounded-full border border-[#30363D] bg-[#161B22] px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:text-white"
+            >
+              Log in
+            </button>
+            <button
+              onClick={() => navigate(user ? "/dashboard" : "/auth/register")}
+              className="rounded-full bg-[#2563EB] px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 transition hover:bg-[#1D4ED8]"
+            >
+              Get Started
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="pt-16 pb-20 px-6 lg:px-12">
-        <div className="mx-auto max-w-4xl text-center space-y-7">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 rounded-md border border-sky-500/20 bg-sky-500/10 px-3.5 py-1 text-xs font-mono text-sky-400">
-            <Zap size={14} />
-            <span>DevFlow v2.0 — Engineering Workflow Platform</span>
+      <main>
+        <section className="relative overflow-hidden px-6 py-24 lg:px-12">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-96 bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.16),_transparent_35%)]" />
+          <div className="mx-auto grid max-w-7xl gap-16 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+            <div className="space-y-8 max-w-xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-sky-300">
+                <Zap size={14} />
+                Designed for dev, product, and ops teams
+              </div>
+
+              <div className="space-y-6">
+                <h1 className="text-5xl font-bold tracking-[-0.05em] text-white sm:text-6xl">
+                  Build better workflows across every team.
+                  <span className="block bg-gradient-to-r from-[#60A5FA] to-[#A78BFA] bg-clip-text text-transparent">
+                    Calm, clear, and ready for fast delivery.
+                  </span>
+                </h1>
+                <p className="max-w-2xl text-base leading-relaxed text-slate-400 sm:text-lg">
+                  DevFlow brings projects, tasks, workflows, and team context together in a polished workspace that feels like part of your process—not another tool to manage.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <button
+                  onClick={() => navigate(user ? "/dashboard" : "/auth/register")}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#2563EB] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 transition hover:bg-[#1D4ED8]"
+                >
+                  Start free
+                  <ArrowRight size={16} />
+                </button>
+                <button
+                  onClick={() => navigate("/auth/login")}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-[#30363D] bg-[#161B22] px-8 py-3 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:text-white"
+                >
+                  View demo
+                </button>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-[#30363D] bg-[#161B22] px-4 py-3 text-center text-xs text-slate-300">
+                  No credit card needed
+                </div>
+                <div className="rounded-2xl border border-[#30363D] bg-[#161B22] px-4 py-3 text-center text-xs text-slate-300">
+                  Quick onboarding
+                </div>
+                <div className="rounded-2xl border border-[#30363D] bg-[#161B22] px-4 py-3 text-center text-xs text-slate-300">
+                  Built for engineering teams
+                </div>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="absolute -left-10 top-20 h-52 w-52 rounded-full bg-[#2563EB]/15 blur-3xl" />
+              <div className="surface-panel relative overflow-hidden rounded-[2rem] border border-[#30363D] bg-[#121721] p-6 shadow-2xl shadow-black/30">
+                <div className="grid gap-5 xl:grid-cols-[0.38fr_0.62fr]">
+                  <div className="rounded-[1.75rem] border border-[#30363D] bg-[#161B22] p-5">
+                    <div className="flex items-center gap-3 border-b border-[#30363D] pb-4">
+                      <div className="h-11 w-11 rounded-3xl bg-[#0D1117] flex items-center justify-center text-sky-400">
+                        <Zap size={18} />
+                      </div>
+                      <div>
+                        <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">DevFlow</p>
+                        <p className="mt-1 text-sm font-semibold text-white">Workspace overview</p>
+                      </div>
+                    </div>
+                    <nav className="mt-5 space-y-3 text-sm text-slate-300">
+                      <button className="flex w-full items-center gap-3 rounded-2xl bg-[#0E1728] px-4 py-3 text-left text-white transition hover:bg-[#181f33]">
+                        <Home size={16} />
+                        <span>Overview</span>
+                      </button>
+                      <button className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition hover:bg-[#181f33]">
+                        <ListChecks size={16} />
+                        <span>Projects</span>
+                      </button>
+                      <button className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition hover:bg-[#181f33]">
+                        <CheckSquare size={16} />
+                        <span>Tasks</span>
+                      </button>
+                      <button className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition hover:bg-[#181f33]">
+                        <Layers size={16} />
+                        <span>Workflows</span>
+                      </button>
+                    </nav>
+                  </div>
+
+                  <div className="rounded-[1.75rem] border border-[#30363D] bg-[#161B22] p-6">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Good morning, Bilal</p>
+                        <h2 className="mt-2 text-xl font-semibold text-white">Everything your team needs in one place.</h2>
+                      </div>
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <div className="flex items-center gap-3 rounded-3xl border border-[#30363D] bg-[#0D1117] px-4 py-2 text-sm text-slate-300">
+                          <Search size={16} />
+                          <span>Search project...</span>
+                        </div>
+                        <button className="inline-flex items-center gap-2 rounded-full bg-[#2563EB] px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-500/15 transition hover:bg-[#1D4ED8]">
+                          <Plus size={14} />
+                          New project
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                      {[
+                        { label: "Projects", value: "12", delta: "+20%" },
+                        { label: "Tasks", value: "56", delta: "+15%" },
+                        { label: "Done", value: "23", delta: "+10%" },
+                        { label: "Team", value: "8", delta: "+5%" },
+                      ].map((item) => (
+                        <div key={item.label} className="rounded-3xl border border-[#30363D] bg-[#0F172A] p-4">
+                          <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{item.label}</p>
+                          <p className="mt-3 text-3xl font-semibold text-white">{item.value}</p>
+                          <p className="mt-2 text-[11px] text-emerald-400">{item.delta} MoM</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-6 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+                      <div className="rounded-3xl border border-[#30363D] bg-[#0F172A] p-4">
+                        <div className="flex items-center justify-between text-xs text-slate-400">
+                          <span>Active workstreams</span>
+                          <span className="text-slate-300">Backend</span>
+                        </div>
+                        <div className="mt-4 space-y-3">
+                          {[
+                            { title: "API release", value: "75%", color: "bg-sky-400", width: "75%" },
+                            { title: "Mobile UI", value: "45%", color: "bg-violet-400", width: "45%" },
+                            { title: "Marketing", value: "90%", color: "bg-emerald-400", width: "90%" },
+                          ].map((item) => (
+                            <div key={item.title} className="rounded-2xl bg-[#0D1117] p-3">
+                              <div className="flex items-center justify-between text-xs text-slate-400">
+                                <span>{item.title}</span>
+                                <span>{item.value}</span>
+                              </div>
+                              <div className="mt-2 h-2 rounded-full bg-white/10">
+                                <div className={`h-2 rounded-full ${item.color}`} style={{ width: item.width }} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="rounded-3xl border border-[#30363D] bg-[#0F172A] p-4">
+                        <div className="flex items-center justify-between text-sm text-white">
+                          <p>Task pulse</p>
+                          <span className="rounded-full border border-[#30363D] bg-[#161B22] px-2 py-1 text-[11px] text-slate-300">56 total</span>
+                        </div>
+                        <div className="mt-6 flex items-center justify-center">
+                          <div className="relative h-40 w-40 rounded-full border border-[#30363D] bg-[#0B1221]">
+                            <div className="absolute inset-0 rounded-full border-[10px] border-transparent border-l-sky-400 border-t-sky-400 border-b-transparent border-r-transparent animate-spin" />
+                            <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-white">56</div>
+                          </div>
+                        </div>
+                        <div className="mt-5 space-y-3 text-xs text-slate-400">
+                          <div className="flex items-center justify-between">
+                            <span>Completed</span>
+                            <span>23 (41%)</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span>In progress</span>
+                            <span>20 (36%)</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span>To do</span>
+                            <span>13 (23%)</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="features" className="bg-[#0B0F17] px-6 py-24 lg:px-12">
+          <div className="mx-auto max-w-5xl text-center">
+            <p className="text-xs uppercase tracking-[0.35em] text-sky-400">Trusted by engineering teams</p>
+            <h2 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">
+              One workspace for every delivery step
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-400 sm:text-base">
+              Ship with clarity using task boards, approvals, reports, and automation designed to keep your team aligned.
+            </p>
           </div>
 
-          {/* Main Title */}
-          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-white leading-tight">
-            Build together. <br />
-            <span className="text-sky-400">Ship faster with automated workflows.</span>
-          </h1>
+          <div className="mt-14 grid gap-5 lg:grid-cols-3">
+            {[
+              { title: "Clear planning", description: "See roadmaps, milestones, and ownership in a single view.", icon: FolderKanban },
+              { title: "Smart execution", description: "Turn work into action with tasks, priorities, and team updates.", icon: CheckSquare },
+              { title: "Reliable delivery", description: "Automate workflows, approvals, and releases without noise.", icon: Workflow },
+            ].map((feature) => {
+              const FeatureIcon = feature.icon;
+              return (
+                <div key={feature.title} className="rounded-[1.75rem] border border-[#30363D] bg-[#161B22] p-6 text-white shadow-sm">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0D1117] text-sky-400">
+                    <FeatureIcon size={20} />
+                  </div>
+                  <h3 className="mt-5 text-lg font-semibold text-white">{feature.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-400">{feature.description}</p>
+                </div>
+              );
+            })}
+          </div>
 
-          {/* Subtitle */}
-          <p className="mx-auto max-w-2xl text-sm sm:text-base text-slate-400 leading-relaxed">
-            DevFlow unifies project planning, realtime sprint boards, and rule-based automation into a single engineering workspace designed for fast-moving teams.
-          </p>
+          <div className="mx-auto mt-16 max-w-4xl text-center text-xs uppercase tracking-[0.3em] text-slate-500">
+            Trusted by teams at
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-8 text-slate-400">
+              <span>Acme Corp</span>
+              <span>Summit Labs</span>
+              <span>TechFlow</span>
+              <span>DevStudio</span>
+              <span>CloudX</span>
+            </div>
+          </div>
+        </section>
 
-          {/* Hero CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+        <section id="cta" className="bg-[#0B0F17] px-6 py-20 lg:px-12">
+          <div className="mx-auto max-w-3xl rounded-[2rem] border border-[#30363D] bg-[#161B22] px-8 py-14 text-center shadow-2xl shadow-black/30">
+            <h2 className="text-3xl font-bold text-white tracking-tight sm:text-4xl">
+              Launch your next sprint with less noise and more clarity.
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed text-slate-400 sm:text-base">
+              Start with a workspace that helps your team move faster, stay aligned, and own delivery across every project.
+            </p>
             <button
               onClick={() => navigate(user ? "/dashboard" : "/auth/register")}
-              className="flex h-11 items-center gap-2 rounded-lg bg-[#F0F6FC] px-6 text-sm font-semibold text-[#0D1117] hover:bg-white transition cursor-pointer"
+              className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-[#2563EB] px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 transition hover:bg-[#1D4ED8]"
             >
-              <span>Get Started Free</span>
+              {user ? "Open the dashboard" : "Create your free workspace"}
               <ArrowRight size={16} />
             </button>
-            <button
-              onClick={() => navigate("/auth/login")}
-              className="flex h-11 items-center gap-2 rounded-lg border border-[#30363D] bg-[#161B22] px-6 text-sm font-medium text-slate-300 hover:border-slate-500 hover:text-white transition cursor-pointer"
-            >
-              <span>Sign In to Workspace</span>
-            </button>
           </div>
-
-          {/* Feature Preview Canvas */}
-          <div className="mt-12 rounded-xl border border-[#30363D] bg-[#161B22] p-4 sm:p-6 shadow-2xl text-left">
-            <div className="flex items-center justify-between border-b border-[#30363D] pb-3 mb-4">
-              <div className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-[#30363D]" />
-                <span className="h-3 w-3 rounded-full bg-[#30363D]" />
-                <span className="h-3 w-3 rounded-full bg-[#30363D]" />
-                <span className="ml-2 text-xs font-mono text-slate-500">devflow.internal / sprint-board</span>
-              </div>
-              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20">
-                ● Live SignalR Hub
-              </span>
-            </div>
-
-            {/* Kanban Column Preview */}
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-lg border border-[#30363D] bg-[#0D1117] p-3.5 space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-white">
-                  <span>To Do</span>
-                  <span className="text-[10px] font-mono text-slate-400">2</span>
-                </div>
-                <div className="rounded border border-[#30363D] bg-[#161B22] p-2.5 space-y-1">
-                  <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">Medium</span>
-                  <p className="text-xs font-medium text-slate-200">Configure Auth Middleware</p>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-[#30363D] bg-[#0D1117] p-3.5 space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-white">
-                  <span>In Progress</span>
-                  <span className="text-[10px] font-mono text-sky-400">1</span>
-                </div>
-                <div className="rounded border border-sky-500/30 bg-sky-500/5 p-2.5 space-y-1">
-                  <span className="text-[10px] font-mono text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded">High</span>
-                  <p className="text-xs font-medium text-white">SignalR Realtime Notification Listener</p>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-[#30363D] bg-[#0D1117] p-3.5 space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-white">
-                  <span>Completed</span>
-                  <span className="text-[10px] font-mono text-emerald-400">3</span>
-                </div>
-                <div className="rounded border border-[#30363D] bg-[#161B22] p-2.5 space-y-1 opacity-75">
-                  <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">Low</span>
-                  <p className="text-xs font-medium text-slate-300">JWT Token Rotation API</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="py-16 border-t border-[#30363D] px-6 lg:px-12 bg-[#0D1117]">
-        <div className="mx-auto max-w-6xl space-y-10">
-          <div className="text-center space-y-2 max-w-xl mx-auto">
-            <h2 className="text-xs font-mono uppercase tracking-wider text-sky-400">
-              Capabilities
-            </h2>
-            <h3 className="text-2xl sm:text-3xl font-bold text-white">
-              Built for Engineering Workspaces
-            </h3>
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            <div className="rounded-xl border border-[#30363D] bg-[#161B22] p-5 space-y-3">
-              <div className="p-2.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20 w-fit">
-                <FolderKanban size={20} />
-              </div>
-              <h4 className="text-sm font-semibold text-white">Project Management</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Organize work under scoped workspace projects with status tracking, milestones, and assigned members.
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-[#30363D] bg-[#161B22] p-5 space-y-3">
-              <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 w-fit">
-                <CheckSquare size={20} />
-              </div>
-              <h4 className="text-sm font-semibold text-white">Task & Sprint Kanban</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Interactive 3-column sprint boards with status transitions (`To Do`, `In Progress`, `Completed`) and priority badges.
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-[#30363D] bg-[#161B22] p-5 space-y-3">
-              <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 w-fit">
-                <Workflow size={20} />
-              </div>
-              <h4 className="text-sm font-semibold text-white">Workflow Automation</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Build automation rules that trigger task updates, team alerts, and workflow actions based on project events.
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-[#30363D] bg-[#161B22] p-5 space-y-3">
-              <div className="p-2.5 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20 w-fit">
-                <Users size={20} />
-              </div>
-              <h4 className="text-sm font-semibold text-white">Team Collaboration</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Manage workspace access with role-based permissions for owners, admins and collaborators.
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-[#30363D] bg-[#161B22] p-5 space-y-3">
-              <div className="p-2.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20 w-fit">
-                <Bell size={20} />
-              </div>
-              <h4 className="text-sm font-semibold text-white">SignalR Notifications</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Real-time WebSocket alerts for task assignments, project status updates, and automation rule executions.
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-[#30363D] bg-[#161B22] p-5 space-y-3">
-              <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 w-fit">
-                <ShieldCheck size={20} />
-              </div>
-              <h4 className="text-sm font-semibold text-white">JWT Bearer Security</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Enterprise-grade JWT authentication with secure refresh token rotation for seamless, session-safe access.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Process Section */}
-      <section id="how-it-works" className="py-16 border-t border-[#30363D] px-6 lg:px-12 bg-[#0D1117]">
-        <div className="mx-auto max-w-5xl space-y-10">
-          <div className="text-center space-y-2 max-w-xl mx-auto">
-            <h2 className="text-xs font-mono uppercase tracking-wider text-sky-400">
-              How It Works
-            </h2>
-            <h3 className="text-2xl sm:text-3xl font-bold text-white">
-              Get Up and Running in 3 Steps
-            </h3>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            <div className="rounded-xl border border-[#30363D] bg-[#161B22] p-5 space-y-2">
-              <span className="text-2xl font-mono font-bold text-sky-400">01</span>
-              <h4 className="text-sm font-semibold text-white">Create Workspace</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Setup your organization workspace and add developers or project managers.
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-[#30363D] bg-[#161B22] p-5 space-y-2">
-              <span className="text-2xl font-mono font-bold text-emerald-400">02</span>
-              <h4 className="text-sm font-semibold text-white">Add Projects & Backlog</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Define engineering projects and create task backlogs with priority badges and due dates.
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-[#30363D] bg-[#161B22] p-5 space-y-2">
-              <span className="text-2xl font-mono font-bold text-amber-400">03</span>
-              <h4 className="text-sm font-semibold text-white">Automate & Monitor</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Configure workflow rules to trigger automated notifications and move tasks seamlessly.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Benefits & Automation Section */}
-      <section id="benefits" className="py-16 border-t border-[#30363D] px-6 lg:px-12 bg-[#0D1117]">
-        <div id="automation" className="mx-auto max-w-5xl space-y-8 scroll-mt-24">
-
-          <div className="grid gap-8 lg:grid-cols-2 items-center">
-            <div className="space-y-4">
-              <h2 className="text-xs font-mono uppercase tracking-wider text-sky-400">
-                Benefits
-              </h2>
-              <h3 className="text-2xl sm:text-3xl font-bold text-white leading-snug">
-                Increase Output and Reduce Manual Overhead
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                DevFlow combines task boards, automation, and realtime collaboration so teams can move faster with less manual coordination.
-              </p>
-
-              <div className="space-y-2.5 pt-1 text-xs text-slate-300">
-                <div className="flex items-center gap-2.5">
-                  <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
-                  <span>Automated event triggers for instant task updates</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
-                  <span>Real-time SignalR WebSockets sync across team members</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
-                  <span>Scoped workspace data isolation & JWT authentication</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-[#30363D] bg-[#161B22] p-5 space-y-3">
-              <div className="flex items-center justify-between border-b border-[#30363D] pb-3 text-xs">
-                <span className="font-semibold text-white">Workflow Rule Engine</span>
-                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                  Automated
-                </span>
-              </div>
-
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between rounded bg-[#0D1117] p-2.5 border border-[#30363D]">
-                  <span className="text-slate-300">Task Created → Notify Assignee</span>
-                  <span className="text-emerald-400 font-mono text-[10px]">Active</span>
-                </div>
-                <div className="flex items-center justify-between rounded bg-[#0D1117] p-2.5 border border-[#30363D]">
-                  <span className="text-slate-300">Task Completed → Trigger Event</span>
-                  <span className="text-emerald-400 font-mono text-[10px]">Active</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 border-t border-[#30363D] px-6 lg:px-12 bg-[#161B22] text-center">
-        <div className="mx-auto max-w-3xl space-y-5">
-          <h2 className="text-3xl font-bold text-white tracking-tight">
-            Build better workflows with DevFlow.
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
-            Join engineering teams shipping faster with automated task tracking and real-time workspace boards.
-          </p>
-          <div className="pt-2">
-            <button
-              onClick={() => navigate(user ? "/dashboard" : "/auth/register")}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#F0F6FC] px-6 py-3 text-xs font-semibold text-[#0D1117] hover:bg-white transition cursor-pointer"
-            >
-              <span>Start Building Free</span>
-              <ArrowRight size={15} />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-[#30363D] bg-[#0D1117] px-6 lg:px-12 py-8 text-xs text-slate-500">
-        <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-4">
-          <DevFlowLogo size="sm" linkToHome={false} />
-
-          <div className="flex items-center gap-6 text-slate-400">
-            <a href="#features" className="hover:text-white transition">
-              Features
-            </a>
-            <a href="#how-it-works" className="hover:text-white transition">
-              Process
-            </a>
-            <Link to="/auth/login" className="hover:text-white transition">
-              Sign in
-            </Link>
-            <Link to="/auth/register" className="hover:text-white transition">
-              Register
-            </Link>
-          </div>
-
-          <span className="font-mono text-[11px]">© 2026 DevFlow</span>
-        </div>
-      </footer>
+        </section>
+      </main>
     </div>
   );
 }
