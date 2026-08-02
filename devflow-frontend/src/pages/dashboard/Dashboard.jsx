@@ -19,7 +19,7 @@ import CreateTaskModal from "../../components/tasks/CreateTaskModal";
 import CreateWorkflowModal from "../../components/workflows/CreateWorkflowModal";
 import AddWorkspaceMemberModal from "../../components/workspaces/AddWorkspaceMemberModal";
 import { createProject, getProjectsByWorkspace } from "../../services/projectService";
-import { createTask } from "../../services/taskService";
+import { createTask, getTasksByProject } from "../../services/taskService";
 import { createWorkflow } from "../../services/workflowService";
 import { addWorkspaceMember, getWorkspaceMembers } from "../../services/workspaceService";
 import { getUnreadNotificationCount } from "../../services/notificationService";
@@ -36,6 +36,7 @@ function Dashboard() {
 
   const [stats, setStats] = useState({
     projectsCount: 0,
+    tasksCount: 0,
     membersCount: 0,
     notificationsCount: 0,
   });
@@ -46,7 +47,7 @@ function Dashboard() {
     if (!workspaceId) {
       setProjects([]);
       setRecentProjects([]);
-      setStats({ projectsCount: 0, membersCount: 0, notificationsCount: 0 });
+      setStats({ projectsCount: 0, tasksCount: 0, membersCount: 0, notificationsCount: 0 });
       setIsLoading(false);
       return;
     }
@@ -77,9 +78,27 @@ function Dashboard() {
         : mItems.length;
       const nCount = typeof notifs?.unreadCount === "number" ? notifs.unreadCount : 0;
 
+      let tasksCount = 0;
+      if (pItems.length > 0) {
+        const taskResults = await Promise.all(
+          pItems.map((p) =>
+            getTasksByProject(p.id, { pageSize: 1 }).catch(() => null)
+          )
+        );
+        tasksCount = taskResults.reduce((sum, res) => {
+          if (!res) return sum;
+          const raw = res?.data || res;
+          if (typeof raw?.totalCount === "number") return sum + raw.totalCount;
+          if (Array.isArray(raw?.items)) return sum + raw.items.length;
+          if (Array.isArray(raw)) return sum + raw.length;
+          return sum;
+        }, 0);
+      }
+
       setProjects(pItems);
       setStats({
         projectsCount: pCount,
+        tasksCount,
         membersCount: mCount,
         notificationsCount: nCount,
       });
@@ -87,7 +106,7 @@ function Dashboard() {
     } catch {
       setProjects([]);
       setRecentProjects([]);
-      setStats({ projectsCount: 0, membersCount: 0, notificationsCount: 0 });
+      setStats({ projectsCount: 0, tasksCount: 0, membersCount: 0, notificationsCount: 0 });
     } finally {
       setIsLoading(false);
     }
@@ -142,9 +161,9 @@ function Dashboard() {
           />
           <StatCard
             title="Tasks"
-            value="--"
+            value={String(stats.tasksCount)}
             icon={CheckSquare}
-            trend="Sprint active"
+            trend="Across projects"
             trendType="up"
             iconBg="bg-emerald-500/10"
             iconColor="text-emerald-400"

@@ -14,6 +14,8 @@ const WorkspaceContext = createContext(null);
 
 export { WorkspaceContext };
 
+const WORKSPACE_STORAGE_KEY = "devflow:selectedWorkspaceId";
+
 export function WorkspaceProvider({ children }) {
   const [workspaces, setWorkspaces] = useState([]);
   const [currentWorkspace, setCurrentWorkspace] = useState(null);
@@ -39,9 +41,16 @@ export function WorkspaceProvider({ children }) {
       setWorkspaces(items);
       setCurrentWorkspace((prev) => {
         if (items.length === 0) return null;
-        if (!prev) return items[0];
-        const found = items.find((w) => w.id === prev.id);
-        return found || items[0];
+        if (prev) {
+          const found = items.find((w) => w.id === prev.id);
+          if (found) return found;
+        }
+        const savedId = localStorage.getItem(WORKSPACE_STORAGE_KEY);
+        if (savedId) {
+          const saved = items.find((w) => String(w.id) === savedId);
+          if (saved) return saved;
+        }
+        return items[0];
       });
     } catch (error) {
       console.warn("Could not fetch workspaces from API:", error?.message || error);
@@ -69,6 +78,9 @@ export function WorkspaceProvider({ children }) {
 
   const selectWorkspace = (workspace) => {
     setCurrentWorkspace(workspace);
+    if (workspace?.id) {
+      localStorage.setItem(WORKSPACE_STORAGE_KEY, String(workspace.id));
+    }
   };
 
   useEffect(() => {

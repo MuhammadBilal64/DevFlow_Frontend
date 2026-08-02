@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { register as registerUser } from "../../services/authService";
+import { UserRole } from "../../constants/enums";
+import { getApiErrorMessage } from "../../utils/apiErrorUtils";
 
 import AuthCard from "../../components/auth/AuthCard";
 import AuthHeader from "../../components/auth/AuthHeader";
@@ -64,6 +66,7 @@ function Register() {
         name: name.trim(),
         email: email.trim(),
         password,
+        role: UserRole.Member,
       });
 
       navigate("/auth/login", {
@@ -75,13 +78,7 @@ function Register() {
 
     } catch (err) {
       console.error(err);
-
-      const serverMsg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Unable to create account.";
-
-      setErrorMsg(serverMsg);
+      setErrorMsg(getApiErrorMessage(err, "Unable to create account."));
     } finally {
       setIsLoading(false);
     }

@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import AuthLayout from "../layouts/AuthLayout";
+import GuestRoute from "./GuestRoute";
 
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
@@ -9,7 +10,7 @@ function AuthRoutes() {
   return (
     <Routes>
 
-      <Route element={<AuthLayout />}>
+      <Route element={<GuestRoute><AuthLayout /></GuestRoute>}>
 
         <Route
           index

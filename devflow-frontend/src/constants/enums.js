@@ -14,6 +14,12 @@ export const WorkspaceRole = {
   Member: 2,
 };
 
+export const ProjectRole = {
+  Owner: 0,
+  Admin: 1,
+  Member: 2,
+};
+
 export const TaskPriority = {
   Low: 0,
   Medium: 1,

@@ -17,7 +17,7 @@ export const useSignalRNotification = (onNotificationReceived) => {
   useEffect(() => {
     if (!accessToken) return;
 
-    const hubUrl = import.meta.env.VITE_SIGNALR_HUB_URL || "https://localhost:7106/notificationHub";
+    const hubUrl = import.meta.env.VITE_SIGNALR_HUB_URL || "http://localhost:5000/notificationHub";
 
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(hubUrl, {

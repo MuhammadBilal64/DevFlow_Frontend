@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { FolderKanban, Plus, Search, Filter, RefreshCw, Eye } from "lucide-react";
 import { useWorkspace } from "../../context/useWorkspace";
 import { getProjectsByWorkspace, createProject } from "../../services/projectService";
@@ -9,6 +10,7 @@ import Skeleton from "../../components/common/Skeleton";
 
 function Projects() {
   const { currentWorkspace } = useWorkspace();
+  const location = useLocation();
   const [projects, setProjects] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -60,6 +62,16 @@ function Projects() {
       ignore = true;
     };
   }, [workspaceId, fetchProjects]);
+
+  useEffect(() => {
+    if (location.state?.openCreate) {
+      setIsCreateOpen(true);
+    }
+    if (location.state?.projectId && projects.length > 0) {
+      const proj = projects.find((p) => p.id === location.state.projectId);
+      if (proj) setSelectedProject(proj);
+    }
+  }, [location.state, projects]);
 
   const handleCreateProject = async (data) => {
     try {

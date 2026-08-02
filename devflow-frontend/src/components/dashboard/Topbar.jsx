@@ -5,7 +5,7 @@ import { useAuth } from "../../context/useAuth";
 import { useWorkspace } from "../../context/useWorkspace";
 import { getUnreadNotificationCount } from "../../services/notificationService";
 import useSignalRNotification from "../../hooks/useSignalRNotification";
-import { NOTIFICATION_COUNT_REFRESH } from "../../utils/notificationEvents";
+import { NOTIFICATION_COUNT_REFRESH, dispatchNotificationReceived } from "../../utils/notificationEvents";
 
 const routeHeaders = {
   "/dashboard": { title: "Dashboard", subtitle: "Overview of your active workspace" },
@@ -42,6 +42,7 @@ function Topbar() {
   useSignalRNotification((notification) => {
     setUnreadCount((prev) => prev + 1);
     setToastMessage(notification.message || "New notification received");
+    dispatchNotificationReceived(notification);
 
     if (toastTimerRef.current) {
       clearTimeout(toastTimerRef.current);
@@ -179,7 +180,7 @@ function Topbar() {
 
         <button
           type="button"
-          onClick={() => navigate("/projects")}
+          onClick={() => navigate("/projects", { state: { openCreate: true } })}
           className="flex h-8 items-center gap-1.5 rounded-lg bg-[#F0F6FC] px-3 text-xs font-semibold text-[#0D1117] hover:bg-white transition cursor-pointer"
         >
           <Plus size={14} />
