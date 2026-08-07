@@ -65,13 +65,20 @@ function Projects() {
 
   useEffect(() => {
     if (location.state?.openCreate) {
-      setIsCreateOpen(true);
+      const timer = setTimeout(() => setIsCreateOpen(true), 0);
+      return () => clearTimeout(timer);
     }
+  }, [location.state?.openCreate]);
+
+  useEffect(() => {
     if (location.state?.projectId && projects.length > 0) {
       const proj = projects.find((p) => p.id === location.state.projectId);
-      if (proj) setSelectedProject(proj);
+      if (proj) {
+        const timer = setTimeout(() => setSelectedProject(proj), 0);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [location.state, projects]);
+  }, [location.state?.projectId, projects]);
 
   const handleCreateProject = async (data) => {
     try {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Calendar, FolderKanban, ArrowRight, ArrowLeft, CheckCircle2, RefreshCw, CheckSquare } from "lucide-react";
+import { Plus, Calendar, FolderKanban, ArrowRight, ArrowLeft, CheckCircle2, RefreshCw, CheckSquare, Search, Filter, GripVertical } from "lucide-react";
 import { useWorkspace } from "../../context/useWorkspace";
 import { getTasksByProject, createTask, updateTaskStatus } from "../../services/taskService";
 import { getProjectsByWorkspace } from "../../services/projectService";
@@ -29,6 +29,9 @@ function Tasks() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [actionError, setActionError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [dragOverCol, setDragOverCol] = useState(null);
 
   // Fetch projects in workspace
   const workspaceId = currentWorkspace?.id;
@@ -114,7 +117,10 @@ function Tasks() {
 
   // Status Change Handler (Kanban status transition)
   const handleStatusChange = async (taskId, newStatus, e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
+    const targetTask = tasks.find((t) => t.id === taskId);
+    if (!targetTask || normalizeStatus(targetTask.status) === newStatus) return;
+
     const previousTasks = tasks;
     setActionError("");
     setTasks((prev) =>
@@ -155,6 +161,38 @@ function Tasks() {
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
   };
 
+  // Drag and Drop handlers
+  const handleDragStart = (e, taskId) => {
+    e.dataTransfer.setData("taskId", String(taskId));
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e, statusVal) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverCol !== statusVal) {
+      setDragOverCol(statusVal);
+    }
+  };
+
+  const handleDragLeave = (e, statusVal) => {
+    e.preventDefault();
+    if (dragOverCol === statusVal) {
+      setDragOverCol(null);
+    }
+  };
+
+  const handleDrop = (e, targetStatusVal) => {
+    e.preventDefault();
+    setDragOverCol(null);
+    const taskIdStr = e.dataTransfer.getData("taskId");
+    if (!taskIdStr) return;
+    const taskId = Number(taskIdStr);
+    if (!isNaN(taskId)) {
+      void handleStatusChange(taskId, targetStatusVal);
+    }
+  };
+
   const columns = [
     { title: "To Do", statusVal: 0, badgeBg: "bg-[#0D1117] text-slate-400 border border-[#30363D]" },
     { title: "In Progress", statusVal: 1, badgeBg: "bg-sky-500/10 text-sky-400 border border-sky-500/20" },
@@ -163,26 +201,66 @@ function Tasks() {
 
   const selectedProjectObj = projects.find((p) => p.id === selectedProjectId);
 
+  // Filter tasks based on Search & Priority
+  const filteredTasks = tasks.filter((t) => {
+    const matchesSearch =
+      searchTerm.trim() === "" ||
+      t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.description?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesPriority =
+      priorityFilter === "all" || Number(t.priority) === Number(priorityFilter);
+
+    return matchesSearch && matchesPriority;
+  });
+
   return (
     <div className="space-y-6 pb-10 select-none">
       {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-[#F0F6FC] flex items-center gap-2">
-            <span>Tasks & Kanban</span>
+            <span>Tasks & Drag-and-Drop Kanban</span>
             {isLoading && <RefreshCw size={14} className="animate-spin text-sky-400" />}
           </h1>
           <p className="mt-1 text-xs text-slate-400">
-            Track issue status, sprint backlogs, and task assignments across workspace projects.
+            Drag cards between columns or use status controls to manage sprint tasks.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Search Box */}
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-8.5 w-44 pl-8 pr-3 text-xs bg-[#161B22] border border-[#30363D] rounded-lg text-white placeholder-slate-500 outline-none focus:border-sky-500 transition"
+            />
+          </div>
+
+          {/* Priority Filter */}
+          <div className="flex items-center gap-1.5 bg-[#161B22] border border-[#30363D] rounded-lg px-2.5 h-8.5">
+            <Filter size={13} className="text-slate-400" />
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="bg-transparent text-xs text-[#F0F6FC] outline-none cursor-pointer"
+            >
+              <option value="all">All Priorities</option>
+              <option value="0">Low Priority</option>
+              <option value="1">Medium Priority</option>
+              <option value="2">High Priority</option>
+            </select>
+          </div>
+
           {projects.length > 0 && (
             <select
               value={selectedProjectId || ""}
               onChange={(e) => setSelectedProjectId(Number(e.target.value))}
-              className="rounded-lg border border-[#30363D] bg-[#161B22] px-3.5 py-2 text-xs text-[#F0F6FC] outline-none focus:border-sky-500 cursor-pointer"
+              className="h-8.5 rounded-lg border border-[#30363D] bg-[#161B22] px-3 text-xs text-[#F0F6FC] outline-none focus:border-sky-500 cursor-pointer"
             >
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -195,7 +273,7 @@ function Tasks() {
           {projects.length > 0 && (
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="flex items-center gap-1.5 rounded-lg bg-[#F0F6FC] px-4 py-2 text-xs font-semibold text-[#0D1117] hover:bg-white transition cursor-pointer"
+              className="flex h-8.5 items-center gap-1.5 rounded-lg bg-[#F0F6FC] px-4 text-xs font-semibold text-[#0D1117] hover:bg-white transition cursor-pointer"
             >
               <Plus size={14} />
               <span>New Task</span>
@@ -234,12 +312,20 @@ function Tasks() {
       ) : (
         <div className="grid gap-6 md:grid-cols-3">
           {columns.map((col) => {
-            const colTasks = tasks.filter((t) => normalizeStatus(t.status) === col.statusVal);
+            const colTasks = filteredTasks.filter((t) => normalizeStatus(t.status) === col.statusVal);
+            const isDragTarget = dragOverCol === col.statusVal;
 
             return (
               <div
                 key={col.title}
-                className="rounded-xl border border-[#30363D] bg-[#161B22] p-4 space-y-3 min-h-[450px]"
+                onDragOver={(e) => handleDragOver(e, col.statusVal)}
+                onDragLeave={(e) => handleDragLeave(e, col.statusVal)}
+                onDrop={(e) => handleDrop(e, col.statusVal)}
+                className={`rounded-xl border p-4 space-y-3 min-h-[450px] transition-colors ${
+                  isDragTarget
+                    ? "border-sky-500 bg-sky-500/5 ring-2 ring-sky-500/20"
+                    : "border-[#30363D] bg-[#161B22]"
+                }`}
               >
                 <div className="flex items-center justify-between border-b border-[#30363D] pb-3">
                   <div className="flex items-center gap-2">
@@ -254,8 +340,8 @@ function Tasks() {
 
                 <div className="space-y-3">
                   {colTasks.length === 0 ? (
-                    <div className="py-12 text-center text-xs text-slate-500 font-mono">
-                      No tasks in {col.title}
+                    <div className="py-12 text-center text-xs text-slate-500 font-mono border-2 border-dashed border-[#30363D]/40 rounded-lg">
+                      {isDragTarget ? "Drop task here" : `No tasks in ${col.title}`}
                     </div>
                   ) : (
                     colTasks.map((task) => {
@@ -265,15 +351,20 @@ function Tasks() {
                       return (
                         <div
                           key={task.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, task.id)}
                           onClick={() => setSelectedTask(task)}
-                          className="group relative rounded-lg border border-[#30363D] bg-[#0D1117] p-3.5 space-y-2 transition hover:border-sky-500 cursor-pointer"
+                          className="group relative rounded-lg border border-[#30363D] bg-[#0D1117] p-3.5 space-y-2 transition hover:border-sky-500 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md"
                         >
                           <div className="flex items-center justify-between">
-                            <span
-                              className={`rounded border px-1.5 py-0.5 text-[10px] font-mono font-semibold ${priorityInfo.className}`}
-                            >
-                              {priorityInfo.label}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <GripVertical size={13} className="text-slate-600 group-hover:text-slate-400 transition" />
+                              <span
+                                className={`rounded border px-1.5 py-0.5 text-[10px] font-mono font-semibold ${priorityInfo.className}`}
+                              >
+                                {priorityInfo.label}
+                              </span>
+                            </div>
                             <span className="text-[10px] font-mono text-slate-500">#{task.id}</span>
                           </div>
 
@@ -362,6 +453,3 @@ function Tasks() {
 }
 
 export default Tasks;
-
-
-
